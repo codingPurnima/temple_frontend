@@ -12,6 +12,50 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        fontFamily: 'TiroDevanagariHindi',
+        appBarTheme: AppBarTheme(
+        centerTitle: true,
+        backgroundColor: const Color.fromARGB(255, 6, 24, 39),
+        toolbarHeight: 85,
+        titleTextStyle: TextStyle(
+          color: Colors.white,
+          fontSize: 45,
+          fontWeight: FontWeight.bold,
+        ),
+        iconTheme: IconThemeData(
+          color: Colors.white,
+        ),
+    ),
+        inputDecorationTheme: InputDecorationTheme(
+          enabledBorder: OutlineInputBorder(
+            borderSide: BorderSide(
+              color: Color(0xFF5C6F82),
+              width: 1.5,
+            ),
+            borderRadius: BorderRadius.circular(15),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderSide: BorderSide(
+              color: Color(0xFF5C6F82),
+              width: 2.5,
+            ),
+            borderRadius: BorderRadius.circular(15),
+          ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(15),
+          ), 
+        ),
+        snackBarTheme: SnackBarThemeData(
+          backgroundColor: Color(0xFF0E2A47),
+          behavior: SnackBarBehavior.fixed,
+        ),
+        bottomNavigationBarTheme: BottomNavigationBarThemeData(
+          backgroundColor: const Color.fromARGB(255, 6, 24, 39),
+          selectedItemColor: Colors.amber,
+          unselectedItemColor: Colors.white,
+        )
+      ),
       home: LoginScreen(),
     );
   }
