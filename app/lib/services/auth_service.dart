@@ -4,7 +4,10 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../core/constants.dart';
 
 class AuthService {
+  static String? _accessToken;
+  static String? _refreshToken;
   final storage = const FlutterSecureStorage();
+  static bool get isLoggedIn => _accessToken != null;
 
   Future<Map<String, dynamic>> login(String email, String password) async {
     final url = Uri.parse("$baseUrl/auth/login");
@@ -37,11 +40,49 @@ class AuthService {
       headers: {"Content-Type": "application/json"},
       body: jsonEncode({"name": name, "email": email, "password": password}),
     );
-    return response.statusCode == 201 || response.statusCode==200;
+    return response.statusCode == 201 || response.statusCode == 200;
+  }
+
+  Future<void> loadTokens() async {
+    _accessToken = await storage.read(key: "access_token");
+    _refreshToken = await storage.read(key: "refresh_token");
   }
 
   Future<String?> getAccessToken() async {
     return await storage.read(key: "access_token");
+  }
+
+  Future<String?> getRefreshToken() async {
+    return await storage.read(key: "refresh_token");
+  }
+
+  Future<String?> refreshAccessToken() async {
+    // use memory first
+    String? refreshToken = _refreshToken;
+
+    refreshToken ??= await storage.read(key: "refresh_token");
+
+    if (refreshToken == null) return null;
+
+    final response = await http.post(
+      Uri.parse("$baseUrl/refresh"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"refresh_token": refreshToken}),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final newAccessToken = data["access_token"];
+
+      await storage.write(key: "access_token", value: newAccessToken);
+
+      // update memory
+      _accessToken = newAccessToken;
+
+      return newAccessToken;
+    }
+
+    return null;
   }
 
   Future<void> logout() async {
