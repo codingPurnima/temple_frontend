@@ -1,6 +1,7 @@
 import 'package:app/services/auth_service.dart';
 import 'package:app/services/dashboard_service.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -54,19 +55,23 @@ class _MainScreenState extends State<MainScreen> {
     }
   }
 
+  Future<String> loadText() async {
+    return await rootBundle.loadString('assets/text/home_screen.txt');
+  }
+
   @override
   Widget build(BuildContext context) {
     final events = data?["upcoming_events"] ?? [];
     final notifications = data?["notifications"] ?? [];
     return Scaffold(
       appBar: AppBar(
-        title: Text("Dashboard"),
+        title: Text("भक्तिपथ"),
         actions: [
           IconButton(
             onPressed: () async {
               await _handleLogout(context);
             },
-            icon: Icon(Icons.logout),
+            icon: Icon(Icons.logout_outlined),
           ),
         ],
       ),
@@ -134,10 +139,28 @@ class _MainScreenState extends State<MainScreen> {
         onRefresh: loadDashboard,
         child: ListView(
           children: [
-            SizedBox(height: 20),
-            Image.asset('assets/images/header_image.png'),
-            SizedBox(height: 20),
-            Center(child: Text("Welcome")),
+            Padding(
+              padding: const EdgeInsets.all(25.0),
+              child: Image.asset('assets/images/header_image.png'),
+            ),
+            SizedBox(height: 10),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 20),
+              child: FutureBuilder(
+                future: loadText(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return CircularProgressIndicator();
+                  } else if (snapshot.hasError) {
+                    return Text('Error: ${snapshot.error}');
+                  } else if (snapshot.hasData) {
+                    return Text(snapshot.data!);
+                  } else {
+                    return Text('No data');
+                  }
+                },
+              ),
+            )
           ],
         ),
       ),
