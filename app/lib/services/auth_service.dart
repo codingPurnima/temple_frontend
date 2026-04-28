@@ -86,6 +86,11 @@ class AuthService {
   }
 
   Future<void> logout() async {
+    final token = await getAccessToken();
+    await http.post(
+      Uri.parse("$baseUrl/logout"),
+      headers: {"Authorization": "Bearer $token"},
+    );
     await storage.deleteAll();
   }
 }
