@@ -23,6 +23,15 @@ class _MainScreenState extends State<MainScreen> {
 
   Future<void> loadDashboard() async {
     final result = await _service.getDashboard();
+    if (result == null) {
+      if (!mounted) return;
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        '/login',
+        (route) => false,
+      );
+      return;
+    }  
 
     setState(() {
       data = result;
@@ -30,7 +39,7 @@ class _MainScreenState extends State<MainScreen> {
     });
   }
 
-  Future<void> _handleLogout(BuildContext context) async{
+  Future<void> _handleLogout(BuildContext context) async {
     try {
       await AuthService().logout();
 
@@ -54,12 +63,12 @@ class _MainScreenState extends State<MainScreen> {
         title: Text("Dashboard"),
         actions: [
           IconButton(
-          onPressed: () async {
-            await _handleLogout(context);
-          },
-          icon: Icon(Icons.logout),
-        ),
-        ]
+            onPressed: () async {
+              await _handleLogout(context);
+            },
+            icon: Icon(Icons.logout),
+          ),
+        ],
       ),
       drawer: Drawer(
         child: isLoading
