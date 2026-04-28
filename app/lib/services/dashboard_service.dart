@@ -22,8 +22,12 @@ class DashboardService {
       },
     );
 
-    return response.statusCode == 200
-        ? jsonDecode(response.body)
-        : null;
+    if (response.statusCode == 401) {
+      // print("Token invalid or expired. Logging out");
+      await _authService.logout();
+      return null;
+    }
+
+    return response.statusCode == 200 ? jsonDecode(response.body) : null;
   }
 }
