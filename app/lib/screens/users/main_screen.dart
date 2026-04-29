@@ -1,3 +1,4 @@
+import 'package:app/screens/common/login_screen.dart';
 import 'package:app/services/auth_service.dart';
 import 'package:app/widgets/app_drawer.dart';
 import 'package:flutter/material.dart';
@@ -43,9 +44,9 @@ class _MainScreenState extends State<MainScreen> {
 
       if (!mounted) return;
 
-      Navigator.of(context).pushNamedAndRemoveUntil(
-        '/login', // make sure this route exists
-        (route) => false,
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_)=>LoginScreen()),
+        (route)=> false,
       );
     } catch (e) {
       print("Logout error: $e");
