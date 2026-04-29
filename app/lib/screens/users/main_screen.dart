@@ -1,5 +1,6 @@
 import 'package:app/services/auth_service.dart';
 import 'package:app/services/dashboard_service.dart';
+import 'package:app/widgets/app_drawer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -13,9 +14,6 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   final DashboardService _service = DashboardService();
 
-  bool isLoading = true;
-  Map<String, dynamic>? data;
-
   @override
   void initState() {
     super.initState();
@@ -26,21 +24,38 @@ class _MainScreenState extends State<MainScreen> {
     final result = await _service.getDashboard();
     if (result == null) {
       if (!mounted) return;
-      Navigator.pushNamedAndRemoveUntil(
-        context,
-        '/login',
-        (route) => false,
-      );
+      Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
       return;
-    }  
+    }
 
-    setState(() {
-      data = result;
-      isLoading = false;
-    });
   }
 
   Future<void> _handleLogout(BuildContext context) async {
+    final shouldLogout = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Confirm Logout'),
+          content: const Text('Are you sure you want to logout?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(false); // cancel
+              },
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop(true); // confirm
+              },
+              child: const Text('Logout'),
+            ),
+          ],
+        );
+      },
+    );
+    if (shouldLogout != true) return;
     try {
       await AuthService().logout();
 
@@ -61,8 +76,6 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final events = data?["upcoming_events"] ?? [];
-    final notifications = data?["notifications"] ?? [];
     return Scaffold(
       appBar: AppBar(
         title: Text("भक्तिपथ"),
@@ -75,65 +88,7 @@ class _MainScreenState extends State<MainScreen> {
           ),
         ],
       ),
-      drawer: Drawer(
-        child: isLoading
-            ? Center(child: CircularProgressIndicator())
-            : data == null
-            ? Center(child: Text("Failed to load data"))
-            : ListView(
-                padding: EdgeInsets.zero,
-                children: [
-                  DrawerHeader(
-                    decoration: BoxDecoration(color: Colors.blue),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Image.asset(
-                            'assets/images/drawer_image.png',
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                        SizedBox(height: 8),
-                        Text(
-                          "Welcome",
-                          style: TextStyle(color: Colors.white, fontSize: 18),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: Text(
-                      "Upcoming Events",
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-
-                  ...events.map<Widget>(
-                    (event) => ListTile(
-                      title: Text(event["title"]),
-                      subtitle: Text(event["description"] ?? ""),
-                    ),
-                  ),
-
-                  Divider(),
-
-                  Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: Text(
-                      "Notifications",
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-
-                  ...notifications.map<Widget>(
-                    (notif) => ListTile(title: Text(notif["message"])),
-                  ),
-                ],
-              ),
-      ),
+      drawer: const AppDrawer(),
 
       body: RefreshIndicator(
         onRefresh: loadDashboard,
@@ -160,7 +115,7 @@ class _MainScreenState extends State<MainScreen> {
                   }
                 },
               ),
-            )
+            ),
           ],
         ),
       ),
