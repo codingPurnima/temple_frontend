@@ -6,8 +6,18 @@ import '../core/constants.dart';
 class AuthService {
   static String? _accessToken;
   static String? _refreshToken;
+
   final storage = const FlutterSecureStorage();
+
+  static String? get accessToken => _accessToken;
+  static String? get refreshToken => _refreshToken;
+
   static bool get isLoggedIn => _accessToken != null;
+
+  Future<void> loadTokens() async {
+    _accessToken = await storage.read(key: "access_token");
+    _refreshToken = await storage.read(key: "refresh_token");
+  }
 
   Future<Map<String, dynamic>> login(String email, String password) async {
     final url = Uri.parse("$baseUrl/auth/login");
@@ -23,6 +33,9 @@ class AuthService {
 
       await storage.write(key: "access_token", value: data["access_token"]);
       await storage.write(key: "refresh_token", value: data["refresh_token"]);
+
+      _accessToken = data["access_token"];
+      _refreshToken = data["refresh_token"];
 
       return {"success": true, "data": data};
     } else {
@@ -43,11 +56,6 @@ class AuthService {
     return response.statusCode == 201 || response.statusCode == 200;
   }
 
-  Future<void> loadTokens() async {
-    _accessToken = await storage.read(key: "access_token");
-    _refreshToken = await storage.read(key: "refresh_token");
-  }
-
   Future<String?> getAccessToken() async {
     return await storage.read(key: "access_token");
   }
@@ -65,7 +73,7 @@ class AuthService {
     if (refreshToken == null) return null;
 
     final response = await http.post(
-      Uri.parse("$baseUrl/refresh"),
+      Uri.parse("$baseUrl/auth/refresh"),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode({"refresh_token": refreshToken}),
     );
@@ -86,11 +94,16 @@ class AuthService {
   }
 
   Future<void> logout() async {
-    final token = await getAccessToken();
-    await http.post(
-      Uri.parse("$baseUrl/logout"),
-      headers: {"Authorization": "Bearer $token"},
-    );
+    final token = _accessToken;
+    if(token!=null){
+      await http.post(
+        Uri.parse("$baseUrl/auth/logout"),
+        headers: {"Authorization": "Bearer $token"},
+      );
+    }
+    
     await storage.deleteAll();
+    _accessToken = null;
+    _refreshToken = null;
   }
 }
