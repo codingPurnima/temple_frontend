@@ -1,5 +1,4 @@
 import 'package:app/services/auth_service.dart';
-import 'package:app/services/dashboard_service.dart';
 import 'package:app/widgets/app_drawer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -12,23 +11,6 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-  final DashboardService _service = DashboardService();
-
-  @override
-  void initState() {
-    super.initState();
-    loadDashboard();
-  }
-
-  Future<void> loadDashboard() async {
-    final result = await _service.getDashboard();
-    if (result == null) {
-      if (!mounted) return;
-      Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
-      return;
-    }
-
-  }
 
   Future<void> _handleLogout(BuildContext context) async {
     final shouldLogout = await showDialog<bool>(
@@ -90,34 +72,31 @@ class _MainScreenState extends State<MainScreen> {
       ),
       drawer: const AppDrawer(),
 
-      body: RefreshIndicator(
-        onRefresh: loadDashboard,
-        child: ListView(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(25.0),
-              child: Image.asset('assets/images/header_image.png'),
+      body: ListView(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(25.0),
+            child: Image.asset('assets/images/header_image.png'),
+          ),
+          SizedBox(height: 10),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 20),
+            child: FutureBuilder(
+              future: loadText(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return CircularProgressIndicator();
+                } else if (snapshot.hasError) {
+                  return Text('Error: ${snapshot.error}');
+                } else if (snapshot.hasData) {
+                  return Text(snapshot.data!);
+                } else {
+                  return Text('No data');
+                }
+              },
             ),
-            SizedBox(height: 10),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 20),
-              child: FutureBuilder(
-                future: loadText(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return CircularProgressIndicator();
-                  } else if (snapshot.hasError) {
-                    return Text('Error: ${snapshot.error}');
-                  } else if (snapshot.hasData) {
-                    return Text(snapshot.data!);
-                  } else {
-                    return Text('No data');
-                  }
-                },
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
