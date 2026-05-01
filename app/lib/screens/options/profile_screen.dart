@@ -48,20 +48,54 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ? const Center(child: Text("Could not fetch details"))
                 : RefreshIndicator(
                     onRefresh: () => loadProfile(),
-                    child: Card(
-                      child: ListTile(
-                        title: Text(userDetails["name"]),
-                        subtitle: Text(userDetails["email"]),
-                        trailing: userDetails["role"] == "SUPER_ADMIN"
-                            ? Text("गुरुदेव")
-                            : userDetails["role"] == "ADMIN"
-                            ? Text("परिकर")
-                            : userDetails["role"] == "PREMIUM"
-                            ? Text("शरणागत ")
-                            : Text(""),
-                      ),
+                    child: Center(
+                      child: Container(
+                        height: 450,
+                        width: 250,
+                        decoration: BoxDecoration(
+                          color: const Color.fromARGB(232, 220, 230, 241),
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [                              
+                                // Top content (can expand if needed)
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      userDetails["name"],
+                                      style: const TextStyle(fontSize: 35, fontWeight: FontWeight.bold),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(userDetails["email"], style: TextStyle(fontSize: 18, fontWeight: FontWeight.w200),),
+                                    const SizedBox(height: 8,),
+                                    Text("1234567890", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),), //temp mob no.
+                                  ],
+                                ),
+                                // Bottom role section
+                                Align(
+                                  alignment: Alignment.bottomRight,
+                                  child: Text(
+                                    userDetails["role"] == "SUPER_ADMIN"
+                                        ? "गुरुदेव"
+                                        : userDetails["role"] == "ADMIN"
+                                            ? "परिकर"
+                                            : userDetails["role"] == "PREMIUM"
+                                                ? "शरणागत"
+                                                : "",
+                                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 45),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                     ),
                     ),
-                  ),
           ),
         ],
       ),
