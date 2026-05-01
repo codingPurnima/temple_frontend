@@ -32,7 +32,10 @@ class _MainScreenState extends State<MainScreen> {
               onPressed: () {
                 Navigator.of(context).pop(true); // confirm
               },
-              child: const Text('Logout'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color.fromARGB(255, 6, 24, 39),
+              ),
+              child: const Text('Logout', style: TextStyle(color: Colors.white),),
             ),
           ],
         );
@@ -76,8 +79,9 @@ class _MainScreenState extends State<MainScreen> {
       body: ListView(
         children: [
           Padding(
-            padding: const EdgeInsets.all(25.0),
-            child: Image.asset('assets/images/header_image.png'),
+            padding: const EdgeInsets.all(15.0),
+            child: ClipRRect(
+              child: Image.asset('assets/images/header_image.png')),
           ),
           SizedBox(height: 10),
           Padding(
