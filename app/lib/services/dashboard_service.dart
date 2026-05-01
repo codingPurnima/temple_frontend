@@ -7,6 +7,11 @@ class DashboardService {
   Future<Map<String, dynamic>?> getDashboard() async {
     final response = await _apiClient.get("$baseUrl/dashboard/");
 
-    return response.statusCode == 200 ? jsonDecode(response.body) : null;
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      return null;
+    }
+
   }
 }
