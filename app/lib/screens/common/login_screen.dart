@@ -49,20 +49,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          "Login",
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 45,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        centerTitle: true,
-        backgroundColor: const Color.fromARGB(255, 6, 24, 39),
-        iconTheme: const IconThemeData(color: Colors.white),
-        toolbarHeight: 100,
-      ),
+      appBar: AppBar(title: Text("Login")),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: SafeArea(
@@ -112,9 +99,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           if (value == null || value.isEmpty) {
                             return "Please enter password";
                           }
-                          // if (value.length < 8) {
-                          //   return "Password must be at least 8 characters";
-                          // }
+                          if (value.length < 8) {
+                            return "Password must be at least 8 characters";
+                          }
                           return null;
                         },
                       ),
@@ -122,11 +109,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       const SizedBox(height: 30),
 
                       ElevatedButton(
-                        // onPressed: _onLoginPressed,
-                        onPressed: () {
-                          print("BUTTON CLICKED");
-                          _onLoginPressed();
-                        },
+                        onPressed: _onLoginPressed,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color.fromARGB(255, 6, 24, 39),
                           foregroundColor: Colors.white,
