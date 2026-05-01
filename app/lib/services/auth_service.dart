@@ -7,6 +7,8 @@ class AuthService {
   static String? _accessToken;
   static String? _refreshToken;
 
+  Future<String?>? _refreshFuture;
+
   final storage = const FlutterSecureStorage();
 
   static String? get accessToken => _accessToken;
@@ -65,43 +67,58 @@ class AuthService {
   }
 
   Future<String?> refreshAccessToken() async {
-    // use memory first
-    String? refreshToken = _refreshToken;
-
-    refreshToken ??= await storage.read(key: "refresh_token");
-
-    if (refreshToken == null) return null;
-
-    final response = await http.post(
-      Uri.parse("$baseUrl/auth/refresh"),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({"refresh_token": refreshToken}),
-    );
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      final newAccessToken = data["access_token"];
-
-      await storage.write(key: "access_token", value: newAccessToken);
-
-      // update memory
-      _accessToken = newAccessToken;
-
-      return newAccessToken;
+    if (_refreshFuture != null) {
+      return _refreshFuture!;
     }
 
-    return null;
+    _refreshFuture = _doRefresh();
+    return _refreshFuture;
+  }
+
+  Future<String?> _doRefresh() async {
+    // use memory first
+    try{
+      String? refreshToken = _refreshToken;
+
+      refreshToken ??= await storage.read(key: "refresh_token");
+
+      if (refreshToken == null) return null;
+
+      final response = await http.post(
+        Uri.parse("$baseUrl/auth/refresh"),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({"refresh_token": refreshToken}),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final newAccessToken = data["access_token"];
+        final newRefreshToken = data["refresh_token"];
+
+        await storage.write(key: "access_token", value: newAccessToken);
+        await storage.write(key: "refresh_token", value: newRefreshToken);
+
+        // update memory
+        _accessToken = newAccessToken;
+        _refreshToken = newRefreshToken;
+
+        return newAccessToken;
+      }   
+      return null;
+    } finally {
+        _refreshFuture=null;
+      }
   }
 
   Future<void> logout() async {
     final token = _accessToken;
-    if(token!=null){
+    if (token != null) {
       await http.post(
         Uri.parse("$baseUrl/auth/logout"),
         headers: {"Authorization": "Bearer $token"},
       );
     }
-    
+
     await storage.deleteAll();
     _accessToken = null;
     _refreshToken = null;
