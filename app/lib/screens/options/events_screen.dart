@@ -21,13 +21,13 @@ class _EventsScreenState extends State<EventsScreen> {
   }
 
   Future<void> loadEvents() async {
-    final result = await _service.getDashboard();
-    if (result != null) {
+    try {
+      final result = await _service.getDashboard();
       setState(() {
-        events = result["upcoming_events"] ?? [];
-        isLoading = false;
-      });
-    } else {
+          events = result?["upcoming_events"] ?? [];
+          isLoading = false;
+        });
+    } catch (e) {
       setState(() {
         isLoading = false;
       });
@@ -52,7 +52,7 @@ class _EventsScreenState extends State<EventsScreen> {
                   return Card(
                     child: ListTile(
                       title: Text(event["title"] ?? ""),
-                      subtitle: Text(event["description"]?? ""),
+                      subtitle: Text(event["description"] ?? ""),
                     ),
                   );
                 },

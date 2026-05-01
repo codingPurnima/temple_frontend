@@ -6,8 +6,7 @@ class BhaktCharitraScreen extends StatefulWidget {
   const BhaktCharitraScreen({super.key});
 
   @override
-  State<BhaktCharitraScreen> createState() =>
-      _BhaktCharitraScreenState();
+  State<BhaktCharitraScreen> createState() => _BhaktCharitraScreenState();
 }
 
 class _BhaktCharitraScreenState extends State<BhaktCharitraScreen> {
@@ -25,14 +24,18 @@ class _BhaktCharitraScreenState extends State<BhaktCharitraScreen> {
   }
 
   Future<void> loadCharacters({String? search}) async {
-    setState(() => isLoading = true);
+    try {
+      setState(() => isLoading = true);
 
-    final result = await _service.getCharacters(search: search);
+      final result = await _service.getCharacters(search: search);
 
-    setState(() {
-      characters = result;
-      isLoading = false;
-    });
+      setState(() {
+        characters = result;
+        isLoading = false;
+      });
+    } catch (e) {
+      print("$e");
+    }
   }
 
   @override
@@ -61,33 +64,32 @@ class _BhaktCharitraScreenState extends State<BhaktCharitraScreen> {
             child: isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : characters.isEmpty
-                    ? const Center(child: Text("No results found"))
-                    : RefreshIndicator(
-                        onRefresh: () => loadCharacters(),
-                        child: ListView.builder(
-                          itemCount: characters.length,
-                          itemBuilder: (context, index) {
-                            final char = characters[index];
+                ? const Center(child: Text("No results found"))
+                : RefreshIndicator(
+                    onRefresh: () => loadCharacters(),
+                    child: ListView.builder(
+                      itemCount: characters.length,
+                      itemBuilder: (context, index) {
+                        final char = characters[index];
 
-                            return Card(
-                              child: ListTile(
-                                title: Text(char["name"] ?? ""),
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) =>
-                                          BhaktDetailScreen(
-                                        characterId: char["id"],
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                            );
-                          },
-                        ),
-                      ),
+                        return Card(
+                          child: ListTile(
+                            title: Text(char["name"] ?? ""),
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => BhaktDetailScreen(
+                                    characterId: char["id"],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        );
+                      },
+                    ),
+                  ),
           ),
         ],
       ),
