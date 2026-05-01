@@ -20,16 +20,17 @@ class _NotificationScreenState extends State<NotificationScreen> {
     loadNotifications();
   }
 
-  Future<void> loadNotifications() async{
-    final result = await _service.getDashboard();
-
-    if (result != null) {
+  Future<void> loadNotifications() async {
+    try {
+      final result = await _service.getDashboard();
       setState(() {
-        notifications = result["notifications"] ?? [];
+        notifications = result?["notifications"] ?? [];
         isLoading = false;
       });
-    } else {
-      setState(() => isLoading = false);
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 
@@ -40,22 +41,22 @@ class _NotificationScreenState extends State<NotificationScreen> {
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : notifications.isEmpty
-              ? const Center(child: Text("No notifications"))
-              : RefreshIndicator(
-                  onRefresh: loadNotifications,
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: notifications.length,
-                    itemBuilder: (context, index) {
-                      final notif = notifications[index];
+          ? const Center(child: Text("No notifications"))
+          : RefreshIndicator(
+              onRefresh: loadNotifications,
+              child: ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: notifications.length,
+                itemBuilder: (context, index) {
+                  final notif = notifications[index];
 
-                      return ListTile(
-                        leading: const Icon(Icons.notifications),
-                        title: Text(notif["message"] ?? ""),
-                      );
-                    },
-                  ),
-                ),
+                  return ListTile(
+                    leading: const Icon(Icons.notifications),
+                    title: Text(notif["message"] ?? ""),
+                  );
+                },
+              ),
+            ),
     );
   }
 }
