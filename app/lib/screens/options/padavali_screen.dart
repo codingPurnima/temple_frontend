@@ -24,15 +24,17 @@ class _PadavaliScreenState extends State<PadavaliScreen> {
   }
 
   Future<void> loadLyrics({String? search}) async {
-    setState(() => isLoading = true);
+    try {
+      setState(() => isLoading = true);
 
-    final result = await _service.getLyrics(search: search);
-    print("API result: $result");
-
-    setState(() {
-      lyrics = result;
-      isLoading = false;
-    });
+      final result = await _service.getLyrics(search: search);
+      setState(() {
+        lyrics = result;
+        isLoading = false;
+      });
+    } catch (e) {
+      print("$e");
+    }
   }
 
   @override
@@ -74,6 +76,7 @@ class _PadavaliScreenState extends State<PadavaliScreen> {
                         return Card(
                           child: ListTile(
                             title: Text(lyric["title"] ?? ""),
+                            trailing: Text(lyric["author"] ?? ""),
                             onTap: () {
                               Navigator.push(
                                 context,
