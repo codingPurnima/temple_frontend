@@ -31,6 +31,8 @@ class MyApp extends StatelessWidget {
           ),
           iconTheme: IconThemeData(color: Colors.white),
         ),
+
+
         inputDecorationTheme: InputDecorationTheme(
           enabledBorder: OutlineInputBorder(
             borderSide: BorderSide(color: Color(0xFF5C6F82), width: 1.5),
@@ -42,20 +44,36 @@ class MyApp extends StatelessWidget {
           ),
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
         ),
+
+
         snackBarTheme: SnackBarThemeData(
           backgroundColor: Color(0xFF0E2A47),
           behavior: SnackBarBehavior.fixed,
         ),
+
+
         bottomNavigationBarTheme: BottomNavigationBarThemeData(
           backgroundColor: const Color.fromARGB(255, 6, 24, 39),
           selectedItemColor: Colors.amber,
           unselectedItemColor: Colors.white,
         ),
+
+
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ButtonStyle(
+            backgroundColor: WidgetStateProperty.all(const Color.fromARGB(255, 6, 24, 39)),
+            foregroundColor: WidgetStateProperty.all(Colors.white),
+          )
+        ),
+
+
         dialogTheme: DialogThemeData(
           backgroundColor: Colors.white,
           titleTextStyle: TextStyle(color: Color(0xFF212121)),
           contentTextStyle: TextStyle(color: Color(0xFF616161)),
         ),
+
+
         listTileTheme: ListTileThemeData(
           tileColor: Colors.white,
           titleTextStyle: TextStyle(
@@ -69,6 +87,8 @@ class MyApp extends StatelessWidget {
             fontWeight: FontWeight.w300,
           ),
         ),
+
+
         scaffoldBackgroundColor: Color(0xFFF5F7FA),
       ),
       home: SplashScreen(),
