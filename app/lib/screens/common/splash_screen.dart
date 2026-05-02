@@ -1,7 +1,8 @@
-
+import 'package:app/screens/admins/admin_panel_screen.dart';
 import 'package:app/screens/common/login_screen.dart';
 import 'package:app/screens/users/main_screen.dart';
 import 'package:app/services/auth_service.dart';
+import 'package:app/services/profile_service.dart';
 import 'package:flutter/material.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -12,7 +13,7 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
- @override
+  @override
   void initState() {
     super.initState();
     checkLogin();
@@ -34,18 +35,35 @@ class _SplashScreenState extends State<SplashScreen> {
 
     if (!mounted) return;
 
-    if (AuthService.isLoggedIn) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const MainScreen()),
-      );
-    }
-    else {
+    if (token != null) {
+      try {
+        final profile = await ProfileService().getProfile();
+
+        if (!mounted) return;
+
+        if (profile["role"] == "ADMIN" || profile["role"] == "SUPER_ADMIN") {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const AdminPanelScreen()),
+          );
+        } else {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const MainScreen()),
+          );
+        }
+      } catch (e) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+        );
+      }
+    } else {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const LoginScreen()),
       );
-    }
+    } 
   }
 
   @override

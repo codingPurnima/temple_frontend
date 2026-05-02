@@ -1,6 +1,8 @@
+import 'package:app/screens/admins/admin_panel_screen.dart';
 import 'package:app/screens/common/register_screen.dart';
 import 'package:app/screens/users/main_screen.dart';
 import 'package:app/services/auth_service.dart';
+import 'package:app/services/profile_service.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
@@ -29,18 +31,26 @@ class _LoginScreenState extends State<LoginScreen> {
         final accessToken = await authService.getAccessToken();
 
         if (accessToken != null) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const MainScreen()),
-          );
+          final profile = await ProfileService().getProfile();
+          if(profile["role"]== "ADMIN" || profile["role"]=="SUPER_ADMIN"){
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const AdminPanelScreen()),
+            );
+          }else{
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const MainScreen()),
+            );
+          }          
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Token missing")),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text("Token missing")));
         }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(result["error"] ?? "Login failed")),
+          SnackBar(content: Text(result["error"] ?? "Login failed. Try again.")),
         );
       }
     }
