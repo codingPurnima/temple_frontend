@@ -1,6 +1,7 @@
 import 'package:app/screens/common/login_screen.dart';
 import 'package:app/services/auth_service.dart';
 import 'package:app/widgets/app_drawer.dart';
+import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -12,7 +13,6 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-
   Future<void> _handleLogout(BuildContext context) async {
     final shouldLogout = await showDialog<bool>(
       context: context,
@@ -35,7 +35,10 @@ class _MainScreenState extends State<MainScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color.fromARGB(255, 6, 24, 39),
               ),
-              child: const Text('Logout', style: TextStyle(color: Colors.white),),
+              child: const Text(
+                'Logout',
+                style: TextStyle(color: Colors.white),
+              ),
             ),
           ],
         );
@@ -48,8 +51,8 @@ class _MainScreenState extends State<MainScreen> {
       if (!mounted) return;
 
       Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_)=>LoginScreen()),
-        (route)=> false,
+        MaterialPageRoute(builder: (_) => LoginScreen()),
+        (route) => false,
       );
     } catch (e) {
       print("Logout error: $e");
@@ -81,7 +84,32 @@ class _MainScreenState extends State<MainScreen> {
           Padding(
             padding: const EdgeInsets.all(15.0),
             child: ClipRRect(
-              child: Image.asset('assets/images/header_image.png')),
+              child: CarouselSlider(
+                options: CarouselOptions(
+                  height: 400,
+                  autoPlay: true,
+                  autoPlayInterval: Duration(seconds: 3),
+                  viewportFraction: 1.0,
+                  enlargeCenterPage: false,
+                ),
+                items:
+                    [
+                      'assets/images/header1gl.png',
+                      'assets/images/header1rr.jpeg',
+                      'assets/images/header2gl.png',
+                      'assets/images/header2rr.jpeg',
+                      'assets/images/header3gl.png',
+                      'assets/images/header3rr.jpeg',
+                      'assets/images/header4rr.jpeg',
+                    ].map((path) {
+                      return Image.asset(
+                        path,
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                      );
+                    }).toList(),
+              ),
+            ),
           ),
           SizedBox(height: 10),
           Padding(
