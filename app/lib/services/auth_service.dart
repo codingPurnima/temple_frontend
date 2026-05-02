@@ -21,6 +21,10 @@ class AuthService {
     _refreshToken = await storage.read(key: "refresh_token");
   }
 
+  Future<String?> getRole() async {
+    return await storage.read(key: "role");
+  }
+
   Future<Map<String, dynamic>> login(String email, String password) async {
     final url = Uri.parse("$baseUrl/auth/login");
 
@@ -38,6 +42,16 @@ class AuthService {
 
       _accessToken = data["access_token"];
       _refreshToken = data["refresh_token"];
+
+      final profileResponse = await http.get(
+        Uri.parse("$baseUrl/auth/me"),
+        headers: {"Authorization": "Bearer ${data["access_token"]}"},
+      );
+
+      if (profileResponse.statusCode == 200) {
+        final profile = jsonDecode(profileResponse.body);
+        await storage.write(key: "role", value: profile["role"]);
+      }
 
       return {"success": true, "data": data};
     } else {
@@ -77,7 +91,7 @@ class AuthService {
 
   Future<String?> _doRefresh() async {
     // use memory first
-    try{
+    try {
       String? refreshToken = _refreshToken;
 
       refreshToken ??= await storage.read(key: "refresh_token");
@@ -103,11 +117,11 @@ class AuthService {
         _refreshToken = newRefreshToken;
 
         return newAccessToken;
-      }   
+      }
       return null;
     } finally {
-        _refreshFuture=null;
-      }
+      _refreshFuture = null;
+    }
   }
 
   Future<void> logout() async {
