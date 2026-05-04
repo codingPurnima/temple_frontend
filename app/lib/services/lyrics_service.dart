@@ -31,4 +31,18 @@ class LyricsService {
       return null;
     }
   }
+
+  Future<bool> deleteLyric(int id) async {
+    final response = await _apiClient.delete("$baseUrl/lyrics/$id");
+    return response.statusCode == 200;
+  }
+
+  Future<bool> updateLyric(int id, Map<String, dynamic> body) async {
+    final response = await _apiClient.patchRequest(
+      "$baseUrl/lyrics/$id",
+      body,
+    );
+
+    return response.statusCode == 200;
+  }
 }
