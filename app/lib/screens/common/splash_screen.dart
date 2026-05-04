@@ -1,4 +1,4 @@
-import 'package:app/screens/admins/admin_panel_screen.dart';
+import 'package:app/helper/session.dart';
 import 'package:app/screens/common/login_screen.dart';
 import 'package:app/screens/users/main_screen.dart';
 import 'package:app/services/auth_service.dart';
@@ -26,7 +26,6 @@ class _SplashScreenState extends State<SplashScreen> {
     await authService.loadTokens();
 
     String? token = await authService.getAccessToken();
-    // String? role = AuthService.role; LATER
 
     // If access token missing, try refreshing
     token ??= await authService.refreshAccessToken();
@@ -37,21 +36,15 @@ class _SplashScreenState extends State<SplashScreen> {
 
     if (token != null) {
       try {
-        final profile = await ProfileService().getProfile();
-
         if (!mounted) return;
 
-        if (profile["role"] == "ADMIN" || profile["role"] == "SUPER_ADMIN") {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => const AdminPanelScreen()),
-          );
-        } else {
-          Navigator.pushReplacement(
+        final profile = await ProfileService().getProfile();
+        Session.role = profile["role"];
+
+        Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (_) => const MainScreen()),
           );
-        }
       } catch (e) {
         Navigator.pushReplacement(
           context,
