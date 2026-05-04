@@ -37,4 +37,18 @@ class CharacterService {
       return null;
     }
   }
+
+  Future<bool> deleteCharacter(int id) async {
+    final response = await _apiClient.delete("$baseUrl/characters/$id");
+    return response.statusCode == 200;
+  }
+
+  Future<bool> updateCharacter(int id, Map<String, dynamic> body) async {
+    final response = await _apiClient.patchRequest(
+      "$baseUrl/characters/$id",
+      body,
+    );
+
+    return response.statusCode == 200;
+  }
 }
