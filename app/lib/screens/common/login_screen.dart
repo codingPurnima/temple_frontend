@@ -1,5 +1,4 @@
 import 'package:app/helper/session.dart';
-import 'package:app/screens/admins/admin_panel_screen.dart';
 import 'package:app/screens/common/register_screen.dart';
 import 'package:app/screens/users/main_screen.dart';
 import 'package:app/services/auth_service.dart';
