@@ -1,3 +1,5 @@
+import 'package:app/helper/session.dart';
+import 'package:app/screens/admins/edit_character_screen.dart';
 import 'package:flutter/material.dart';
 import '../../services/character_service.dart';
 
@@ -36,7 +38,25 @@ class _BhaktDetailScreenState extends State<BhaktDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("चरित्र विवरण")),
+      appBar: AppBar(title: FittedBox(fit: BoxFit.scaleDown, child: Text(character?["name"]??"")), actions: [
+        if (Session.isAdmin)
+      IconButton(
+        icon: const Icon(Icons.edit),
+        onPressed: () async {
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) =>
+                  EditCharacterScreen(character: character!),
+            ),
+          );
+
+          if (result == true) {
+            loadCharacter();
+          }
+        },
+      ),
+      ],),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : character == null
@@ -47,21 +67,6 @@ class _BhaktDetailScreenState extends State<BhaktDetailScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        SizedBox(
-                          height: 350,
-                          width: double.infinity,
-                          child: Image.asset(
-                            'assets/images/MeeraBaiSa.png',
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                        Text(
-                          character!["name"] ?? "",
-                          style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 20),
                         Text(character!["description"] ?? ""),
                       ],
                     ),

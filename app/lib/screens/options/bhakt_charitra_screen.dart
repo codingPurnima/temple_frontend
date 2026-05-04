@@ -1,3 +1,4 @@
+import 'package:app/helper/session.dart';
 import 'package:app/screens/details/bhakt_detail_screen.dart';
 import 'package:flutter/material.dart';
 import '../../services/character_service.dart';
@@ -75,6 +76,51 @@ class _BhaktCharitraScreenState extends State<BhaktCharitraScreen> {
                         return Card(
                           child: ListTile(
                             title: Text(char["name"] ?? ""),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                // 👑 DELETE button
+                                if (Session.isAdmin)
+                                  IconButton(
+                                    icon: const Icon(Icons.delete, color: Colors.red),
+                                    onPressed: () async {
+                                      final confirm = await showDialog<bool>(
+                                        context: context,
+                                        builder: (_) => AlertDialog(
+                                          title: const Text("Delete"),
+                                          content: const Text("Delete this character?"),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () => Navigator.pop(context, false),
+                                              child: const Text("Cancel"),
+                                            ),
+                                            ElevatedButton(
+                                              onPressed: () => Navigator.pop(context, true),
+                                              child: const Text("Delete"),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+
+                                      if (confirm == true) {
+                                        final success =
+                                            await _service.deleteCharacter(char["id"]);
+
+                                        if (success) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(content: Text("Deleted")),
+                                          );
+                                          loadCharacters();
+                                        } else {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(content: Text("Failed")),
+                                          );
+                                        }
+                                      }
+                                    },
+                                  ),
+                              ],
+                            ),
                             onTap: () {
                               Navigator.push(
                                 context,

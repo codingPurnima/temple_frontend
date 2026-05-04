@@ -49,6 +49,9 @@ class CharacterService {
       body,
     );
 
+    print("STATUS: ${response.statusCode}");
+    print("BODY: ${response.body}");
+
     return response.statusCode == 200;
   }
 }
