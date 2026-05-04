@@ -39,6 +39,7 @@ class ApiClient {
     }
     return response;
   }
+
   bool _isTokenExpired(String token) {
     try {
       final parts = token.split('.');
@@ -118,6 +119,39 @@ class ApiClient {
           Uri.parse(url),
           headers: _headers(newToken),
           body: jsonEncode(body),
+        );
+      } else {
+        await _authService.logout();
+        navigatorKey.currentState?.pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => LoginScreen()),
+          (route) => false,
+        );
+        throw Exception("SESSION_EXPIRED");
+      }
+    }
+
+    return response;
+  }
+
+  Future<http.Response> delete(String url) async{
+     String? token = await _authService.getAccessToken();
+
+    if (token != null && _isTokenExpired(token)) {
+      token = await _authService.refreshAccessToken();
+    }
+
+    var response = await http.delete(
+      Uri.parse(url),
+      headers: _headers(token),
+    );
+
+    if (response.statusCode == 401) {
+      final newToken = await _authService.refreshAccessToken();
+
+      if (newToken != null) {
+        response = await http.delete(
+          Uri.parse(url),
+          headers: _headers(newToken),
         );
       } else {
         await _authService.logout();
