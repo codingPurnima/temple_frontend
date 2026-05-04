@@ -1,3 +1,5 @@
+import 'package:app/screens/admins/create_events_screen.dart';
+import 'package:app/screens/admins/make_admin_screen.dart';
 import 'package:app/screens/common/login_screen.dart';
 import 'package:app/services/auth_service.dart';
 import 'package:flutter/material.dart';
@@ -95,20 +97,32 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
             ),
             AdminCard(
               title: "Make Admin",
-              icon: Icons.person,
-              color: Colors.teal,
-              screen: CreateCharacterScreen(),
+              icon: Icons.add_moderator_outlined,
+              color: Colors.cyan,
+              screen: MakeAdminScreen(),
             ),
             AdminCard(
               title: "Add Event",
-              icon: Icons.person,
-              color: Colors.teal,
-              screen: CreateCharacterScreen(),
+              icon: Icons.event_available,
+              color:  Color(0xFF1E3A8A),
+              screen: CreateEventsScreen(),
             ),
             AdminCard(
               title: "View Participants",
-              icon: Icons.person,
-              color: Colors.teal,
+              icon: Icons.people_rounded,
+              color: Color(0xFFF59E0B),
+              screen: CreateCharacterScreen(),
+            ),
+            AdminCard(
+              title: "Add quote",
+              icon: Icons.join_full,
+              color: Color.fromARGB(255, 65, 163, 195),
+              screen: CreateCharacterScreen(),
+            ),
+            AdminCard(
+              title: "Add sampradaya information",
+              icon: Icons.list_alt,
+              color: Color.fromARGB(255, 65, 163, 195),
               screen: CreateCharacterScreen(),
             ),
           ],
