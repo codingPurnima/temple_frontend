@@ -1,3 +1,4 @@
+import 'package:app/helper/session.dart';
 import 'package:app/screens/admins/admin_panel_screen.dart';
 import 'package:app/screens/common/register_screen.dart';
 import 'package:app/screens/users/main_screen.dart';
@@ -32,17 +33,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
         if (accessToken != null) {
           final profile = await ProfileService().getProfile();
-          if(profile["role"]== "ADMIN" || profile["role"]=="SUPER_ADMIN"){
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const AdminPanelScreen()),
-            );
-          }else{
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const MainScreen()),
-            );
-          }          
+          Session.role = profile["role"];
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const MainScreen()),
+          );
         } else {
           ScaffoldMessenger.of(
             context,
@@ -50,7 +45,9 @@ class _LoginScreenState extends State<LoginScreen> {
         }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(result["error"] ?? "Login failed. Try again.")),
+          SnackBar(
+            content: Text(result["error"] ?? "Login failed. Try again."),
+          ),
         );
       }
     }
