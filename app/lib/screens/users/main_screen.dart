@@ -32,9 +32,6 @@ class _MainScreenState extends State<MainScreen> {
               onPressed: () {
                 Navigator.of(context).pop(true); // confirm
               },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color.fromARGB(255, 6, 24, 39),
-              ),
               child: const Text(
                 'Logout',
                 style: TextStyle(color: Colors.white),
@@ -94,13 +91,13 @@ class _MainScreenState extends State<MainScreen> {
                 ),
                 items:
                     [
-                      'assets/images/header1gl.png',
-                      'assets/images/header1rr.jpeg',
-                      'assets/images/header2gl.png',
-                      'assets/images/header2rr.jpeg',
-                      'assets/images/header3gl.png',
-                      'assets/images/header3rr.jpeg',
-                      'assets/images/header4rr.jpeg',
+                      'assets/images/DashboardCarousel/header1gl.png',
+                      'assets/images/DashboardCarousel/header1rr.jpeg',
+                      'assets/images/DashboardCarousel/header2gl.png',
+                      'assets/images/DashboardCarousel/header2rr.jpeg',
+                      'assets/images/DashboardCarousel/header3gl.png',
+                      'assets/images/DashboardCarousel/header3rr.jpeg',
+                      'assets/images/DashboardCarousel/header4rr.jpeg',
                     ].map((path) {
                       return Image.asset(
                         path,
