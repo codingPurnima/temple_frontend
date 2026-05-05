@@ -76,10 +76,21 @@ class _PadavaliScreenState extends State<PadavaliScreen> {
             child: isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : lyrics.isEmpty
-                ? const Center(child: Text("No results found"))
+                ? RefreshIndicator(
+                    onRefresh: () =>
+                        loadLyrics(search: _searchController.text),
+                    child: ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      children: const [
+                        SizedBox(height: 300),
+                        Center(child: Text("No results found")),
+                      ],
+                    ),
+                  )
                 : RefreshIndicator(
-                    onRefresh: () => loadLyrics(),
+                    onRefresh: () => loadLyrics(search: _searchController.text),
                     child: ListView.builder(
+                      physics: const AlwaysScrollableScrollPhysics(),
                       itemCount: lyrics.length,
                       itemBuilder: (context, index) {
                         final lyric = lyrics[index];

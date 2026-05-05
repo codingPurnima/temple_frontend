@@ -77,10 +77,21 @@ class _BhaktCharitraScreenState extends State<BhaktCharitraScreen> {
             child: isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : characters.isEmpty
-                ? const Center(child: Text("No results found"))
+                ? RefreshIndicator(
+                    onRefresh: () =>
+                        loadCharacters(search: _searchController.text),
+                    child: ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      children: const [
+                        SizedBox(height: 300),
+                        Center(child: Text("No results found")),
+                      ],
+                    ),
+                  )
                 : RefreshIndicator(
                     onRefresh: () => loadCharacters(),
                     child: ListView.builder(
+                      physics: AlwaysScrollableScrollPhysics(),
                       itemCount: characters.length,
                       itemBuilder: (context, index) {
                         final char = characters[index];
