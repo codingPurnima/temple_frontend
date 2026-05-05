@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'package:app/core/constants.dart';
+import 'package:app/widgets/user_model.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'auth_service.dart';
@@ -133,17 +135,14 @@ class ApiClient {
     return response;
   }
 
-  Future<http.Response> delete(String url) async{
-     String? token = await _authService.getAccessToken();
+  Future<http.Response> delete(String url) async {
+    String? token = await _authService.getAccessToken();
 
     if (token != null && _isTokenExpired(token)) {
       token = await _authService.refreshAccessToken();
     }
 
-    var response = await http.delete(
-      Uri.parse(url),
-      headers: _headers(token),
-    );
+    var response = await http.delete(Uri.parse(url), headers: _headers(token));
 
     if (response.statusCode == 401) {
       final newToken = await _authService.refreshAccessToken();
@@ -164,5 +163,32 @@ class ApiClient {
     }
 
     return response;
+  }
+
+  static Future<List<User>> getUsers(String token) async {
+    final res = await http.get(
+      Uri.parse("$baseUrl/admin/users"),
+      headers: {"Authorization": "Bearer $token"},
+    );
+
+    if (res.statusCode == 200) {
+      List data = jsonDecode(res.body);
+      return data.map((e) => User.fromJson(e)).toList();
+    } else {
+      throw Exception("Failed to fetch users");
+    }
+  }
+
+  static Future<void> makeAdmin(int userId, String token) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/admin/make-admin/$userId'),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (res.statusCode != 200) {
+      throw Exception("Failed to promote user");
+    }
   }
 }
