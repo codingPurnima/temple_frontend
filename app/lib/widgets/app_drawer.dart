@@ -1,3 +1,5 @@
+import 'package:app/helper/session.dart';
+import 'package:app/screens/admins/admin_panel_screen.dart';
 import 'package:app/screens/options/bhakt_charitra_screen.dart';
 import 'package:app/screens/options/karyakram_screen.dart';
 import 'package:app/screens/options/padavali_screen.dart';
@@ -40,42 +42,42 @@ class AppDrawer extends StatelessWidget {
           ),
           ListTile(
             leading: const Icon(Icons.music_note),
-            title: const Text("पदावली ", style: TextStyle(color: Colors.black),),
+            title: const Text("पदावली", style: TextStyle(color: Colors.black),),
             onTap: () {
               _navigate(context, const PadavaliScreen());
             },
           ),
           ListTile(
             leading: const Icon(Icons.person_3),
-            title: const Text("भक्त चरित्र ", style: TextStyle(color: Colors.black),),
+            title: const Text("भक्त चरित्र", style: TextStyle(color: Colors.black),),
             onTap: () {
               _navigate(context, const BhaktCharitraScreen());
             },
           ),
           ListTile(
             leading: const Icon(Icons.notifications),
-            title: const Text("सूचनाएँ ", style: TextStyle(color: Colors.black),),
+            title: const Text("सूचनाएँ", style: TextStyle(color: Colors.black),),
             onTap: () {
               _navigate(context, const NotificationScreen());
             },
           ),
           ListTile( // these are the ones for which people can register 
             leading: const Icon(Icons.event),
-            title: const Text("उत्सव ", style: TextStyle(color: Colors.black),),
+            title: const Text("उत्सव", style: TextStyle(color: Colors.black),),
             onTap: () {
               _navigate(context, const EventsScreen());
             },
           ),
           ListTile( // vaishnav specific dates
             leading: const Icon(Icons.calendar_month),
-            title: const Text("पञ्चाङ्ग ", style: TextStyle(color: Colors.black),),
+            title: const Text("पञ्चाङ्ग", style: TextStyle(color: Colors.black),),
             onTap: () {
               _navigate(context, const PanchangScreen());
             },
           ),
           ListTile( 
             leading: const Icon(Icons.calendar_today),
-            title: const Text("कथा कार्यक्रम ", style: TextStyle(color: Colors.black),),
+            title: const Text("कथा कार्यक्रम", style: TextStyle(color: Colors.black),),
             onTap: () {
               _navigate(context, const KaryakramScreen());
             },
@@ -101,18 +103,28 @@ class AppDrawer extends StatelessWidget {
               _navigate(context, const ProfileScreen());
             },
           ),
-          ListTile(
-            leading: const Icon(Icons.list_alt),
-            title: const Text("संप्रदाय विशेष ", style: TextStyle(color: Colors.black),),
+          if(Session.isPremiumUser || Session.isAdmin)
+            ListTile(
+              leading: const Icon(Icons.book_outlined),
+              title: const Text("प्रकाशण", style: TextStyle(color: Colors.black),),
+              onTap: () {
+                _navigate(context, const SampradayaScreen()); //temporarily navigating here
+              },
+            ),
+          if(Session.isPremiumUser || Session.isAdmin)
+            ListTile(
+              leading: const Icon(Icons.list_alt),
+              title: const Text("संप्रदाय विशेष", style: TextStyle(color: Colors.black),),
+              onTap: () {
+                _navigate(context, const SampradayaScreen());
+              },
+            ),
+          if(Session.isAdmin)
+            ListTile(
+            leading: const Icon(Icons.admin_panel_settings),
+            title: const Text("Admin Panel", style: TextStyle(color: Colors.black),),
             onTap: () {
-              _navigate(context, const SampradayaScreen());
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.book_outlined),
-            title: const Text("प्रकाशण ", style: TextStyle(color: Colors.black),),
-            onTap: () {
-              _navigate(context, const SampradayaScreen()); //temporarily navigating here
+              _navigate(context, const AdminPanelScreen());
             },
           ),
         ],
