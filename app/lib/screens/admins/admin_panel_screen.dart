@@ -1,5 +1,5 @@
 import 'package:app/screens/admins/create_events_screen.dart';
-import 'package:app/screens/admins/make_admin_screen.dart';
+import 'package:app/screens/admins/manage_users_screen.dart';
 import 'package:app/screens/common/login_screen.dart';
 import 'package:app/services/auth_service.dart';
 import 'package:flutter/material.dart';
@@ -64,9 +64,10 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final token = AuthService.accessToken!;
     return Scaffold(
       appBar: AppBar(
-        title: FittedBox(fit: BoxFit.scaleDown,child: Text("भक्तिपथ- Admin")),
+        title: FittedBox(fit: BoxFit.scaleDown, child: Text("भक्तिपथ- Admin")),
         actions: [
           IconButton(
             onPressed: () async {
@@ -82,7 +83,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
           crossAxisCount: 2,
           crossAxisSpacing: 16,
           mainAxisSpacing: 16,
-          children: const [
+          children: [
             AdminCard(
               title: "Add Lyrics",
               icon: Icons.music_note,
@@ -99,12 +100,12 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
               title: "Make Admin",
               icon: Icons.add_moderator_outlined,
               color: Colors.cyan,
-              screen: MakeAdminScreen(),
+              screen: ManageUsersScreen(token: token,),
             ),
             AdminCard(
               title: "Add Event",
               icon: Icons.event_available,
-              color:  Color(0xFF1E3A8A),
+              color: Color(0xFF1E3A8A),
               screen: CreateEventsScreen(),
             ),
             AdminCard(
