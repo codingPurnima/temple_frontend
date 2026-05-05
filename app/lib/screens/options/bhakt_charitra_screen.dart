@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:app/helper/session.dart';
 import 'package:app/screens/details/bhakt_detail_screen.dart';
 import 'package:flutter/material.dart';
@@ -17,6 +19,15 @@ class _BhaktCharitraScreenState extends State<BhaktCharitraScreen> {
   List characters = [];
 
   final TextEditingController _searchController = TextEditingController();
+
+  Timer? _debounce;
+
+  void _onSearchChanged(String value){
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 400), () {
+      loadCharacters(search: value);
+    });
+  }
 
   @override
   void initState() {
@@ -49,6 +60,7 @@ class _BhaktCharitraScreenState extends State<BhaktCharitraScreen> {
             padding: const EdgeInsets.all(10),
             child: TextField(
               controller: _searchController,
+              onChanged: _onSearchChanged,
               decoration: InputDecoration(
                 hintText: "Search",
                 suffixIcon: IconButton(
@@ -82,20 +94,27 @@ class _BhaktCharitraScreenState extends State<BhaktCharitraScreen> {
                                 // 👑 DELETE button
                                 if (Session.isAdmin)
                                   IconButton(
-                                    icon: const Icon(Icons.delete, color: Colors.red),
+                                    icon: const Icon(
+                                      Icons.delete,
+                                      color: Colors.red,
+                                    ),
                                     onPressed: () async {
                                       final confirm = await showDialog<bool>(
                                         context: context,
                                         builder: (_) => AlertDialog(
                                           title: const Text("Delete"),
-                                          content: const Text("Delete this character?"),
+                                          content: const Text(
+                                            "Delete this character?",
+                                          ),
                                           actions: [
                                             TextButton(
-                                              onPressed: () => Navigator.pop(context, false),
+                                              onPressed: () =>
+                                                  Navigator.pop(context, false),
                                               child: const Text("Cancel"),
                                             ),
                                             ElevatedButton(
-                                              onPressed: () => Navigator.pop(context, true),
+                                              onPressed: () =>
+                                                  Navigator.pop(context, true),
                                               child: const Text("Delete"),
                                             ),
                                           ],
@@ -103,17 +122,25 @@ class _BhaktCharitraScreenState extends State<BhaktCharitraScreen> {
                                       );
 
                                       if (confirm == true) {
-                                        final success =
-                                            await _service.deleteCharacter(char["id"]);
+                                        final success = await _service
+                                            .deleteCharacter(char["id"]);
 
                                         if (success) {
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                            const SnackBar(content: Text("Deleted")),
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            const SnackBar(
+                                              content: Text("Deleted"),
+                                            ),
                                           );
                                           loadCharacters();
                                         } else {
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                            const SnackBar(content: Text("Failed")),
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            const SnackBar(
+                                              content: Text("Failed"),
+                                            ),
                                           );
                                         }
                                       }

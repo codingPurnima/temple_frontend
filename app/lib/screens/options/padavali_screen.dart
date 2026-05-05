@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:app/screens/details/pad_screen.dart';
 import 'package:flutter/material.dart';
 import '../../services/lyrics_service.dart';
@@ -17,6 +19,15 @@ class _PadavaliScreenState extends State<PadavaliScreen> {
   List lyrics = [];
 
   final TextEditingController _searchController = TextEditingController();
+
+  Timer? _debounce;
+
+  void _onSearchChanged(String value) {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 400), () {
+      loadLyrics(search: value);
+    });
+  }
 
   @override
   void initState() {
@@ -48,6 +59,7 @@ class _PadavaliScreenState extends State<PadavaliScreen> {
             padding: const EdgeInsets.all(10),
             child: TextField(
               controller: _searchController,
+              onChanged: _onSearchChanged,
               decoration: InputDecoration(
                 hintText: "Search",
                 suffixIcon: IconButton(
@@ -113,14 +125,24 @@ class _PadavaliScreenState extends State<PadavaliScreen> {
                                       if (confirm == true) {
                                         final success = await _service
                                             .deleteLyric(lyric["id"]);
-                                        if(success){
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          const SnackBar(content: Text("Deleted successfully")),
-                                        );
-                                        loadLyrics();
-                                        } else{
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                            const SnackBar(content: Text("Delete failed")),
+                                        if (success) {
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            const SnackBar(
+                                              content: Text(
+                                                "Deleted successfully",
+                                              ),
+                                            ),
+                                          );
+                                          loadLyrics();
+                                        } else {
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            const SnackBar(
+                                              content: Text("Delete failed"),
+                                            ),
                                           );
                                         }
                                       }

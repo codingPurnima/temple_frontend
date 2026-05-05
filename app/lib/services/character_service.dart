@@ -9,7 +9,8 @@ class CharacterService {
     String url = "$baseUrl/characters/get";
 
     if (search != null && search.isNotEmpty) {
-      url += "?search=$search";
+      final encoded = Uri.encodeQueryComponent(search);
+      url += "?search=$encoded";
     }
 
     final response = await _apiClient.get(url);
@@ -24,8 +25,7 @@ class CharacterService {
   }
 
   Future<Map<String, dynamic>?> getCharacterById(int id) async {
-    final response =
-        await _apiClient.get("$baseUrl/characters/by-id/$id");
+    final response = await _apiClient.get("$baseUrl/characters/by-id/$id");
 
     if (response.statusCode == 200) {
       return jsonDecode(response.body);

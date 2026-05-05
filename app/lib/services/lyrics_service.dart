@@ -9,7 +9,8 @@ class LyricsService {
     String url = "$baseUrl/lyrics/get";
 
     if (search != null && search.isNotEmpty) {
-      url += "?search=$search";
+      final encoded = Uri.encodeQueryComponent(search);
+      url += "?search=$encoded";
     }
 
     final response = await _apiClient.get(url);
@@ -38,10 +39,7 @@ class LyricsService {
   }
 
   Future<bool> updateLyric(int id, Map<String, dynamic> body) async {
-    final response = await _apiClient.patchRequest(
-      "$baseUrl/lyrics/$id",
-      body,
-    );
+    final response = await _apiClient.patchRequest("$baseUrl/lyrics/$id", body);
 
     return response.statusCode == 200;
   }
