@@ -37,9 +37,10 @@ class AuthService {
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
 
-      await storage.write(key: "access_token", value: data["access_token"]);
-      await storage.write(key: "refresh_token", value: data["refresh_token"]);
-
+      await Future.wait([
+        storage.write(key: "access_token", value: data["access_token"]),
+        storage.write(key: "refresh_token", value: data["refresh_token"]),
+      ]);
       _accessToken = data["access_token"];
       _refreshToken = data["refresh_token"];
 
