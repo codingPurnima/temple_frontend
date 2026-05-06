@@ -33,12 +33,6 @@ class _CreateLyricsScreenState extends State<CreateLyricsScreen> {
 
     setState(() => isLoading = true);
 
-    print({
-  "title": titleController.text.trim(),
-  "content": contentController.text.trim(),
-  "author": authorController.text.trim(),
-});
-
     final response = await _apiClient.postRequest("$baseUrl/lyrics/add", {
       "title": titleController.text.trim(),
       "content": contentController.text.trim(),
@@ -54,7 +48,11 @@ class _CreateLyricsScreenState extends State<CreateLyricsScreen> {
         backgroundColor: Colors.green,
       ),
     );
-      Navigator.pop(context);
+      titleController.clear();
+      contentController.clear();
+      authorController.clear();
+      FocusScope.of(context).unfocus();
+      setState(() {});
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
