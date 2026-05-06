@@ -1,6 +1,7 @@
 import 'package:app/core/constants.dart';
 import 'package:app/services/api_service.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class CreateEventsScreen extends StatefulWidget {
   const CreateEventsScreen({super.key});
@@ -15,6 +16,9 @@ class _CreateEventsScreenState extends State<CreateEventsScreen> {
   final capacityController = TextEditingController();
   final startDateController = TextEditingController();
   final endDateController = TextEditingController();
+
+  DateTime? selectedStartDate;
+  DateTime? selectedEndDate;
 
   final ApiClient _apiClient = ApiClient();
 
@@ -36,31 +40,33 @@ class _CreateEventsScreenState extends State<CreateEventsScreen> {
 
     final response = await _apiClient.postRequest("$baseUrl/events/create", {
       "title": titleController.text.trim(),
-      "description": descController.text.trim().isEmpty? null : descController.text.trim(),
-      "capacity": capacityController.text.trim().isEmpty?null: int.parse(capacityController.text.trim()),
-      "start_date": startDateController.text.trim(),
-      "end_date": endDateController.text.trim(),
+      "description": descController.text.trim().isEmpty
+          ? null
+          : descController.text.trim(),
+      "capacity": capacityController.text.trim().isEmpty
+          ? null
+          : int.parse(capacityController.text.trim()),
+      "start_date": DateFormat('yyyy-MM-dd').format(selectedStartDate!),
+      "end_date": DateFormat('yyyy-MM-dd').format(selectedEndDate!),
     });
 
     setState(() {
       isLoading = false;
     });
 
-print(response.body);
+    print(response.body);
 
     if (response.statusCode == 200 || response.statusCode == 201) {
       ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text("Event added successfully!"),
-        backgroundColor: Colors.green,
-      ),
-    );
+        SnackBar(
+          content: Text("Event added successfully!"),
+          backgroundColor: Colors.green,
+        ),
+      );
       Navigator.pop(context);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Failed to create event. Please try again."),
-        ),
+        SnackBar(content: Text("Failed to create event. Please try again.")),
       );
     }
   }
@@ -93,7 +99,9 @@ print(response.body);
 
                 TextFormField(
                   controller: descController,
-                  decoration: const InputDecoration(labelText: "Description (optional)"),
+                  decoration: const InputDecoration(
+                    labelText: "Description (optional)",
+                  ),
                 ),
 
                 const SizedBox(height: 5),
@@ -124,9 +132,10 @@ print(response.body);
                     );
                     if (pickedDate != null) {
                       setState(() {
-                        selectedDate = pickedDate;
-                        startDateController.text =
-                            "${selectedDate!.year}-${selectedDate!.month.toString().padLeft(2, '0')}-${selectedDate!.day.toString().padLeft(2, '0')}";
+                        selectedStartDate = pickedDate;
+                        startDateController.text = DateFormat(
+                          'dd-MM-yyyy',
+                        ).format(selectedStartDate!);
                       });
                     }
                   },
@@ -155,9 +164,10 @@ print(response.body);
                     );
                     if (pickedDate != null) {
                       setState(() {
-                        selectedDate = pickedDate;
-                        endDateController.text =
-                            "${selectedDate!.year}-${selectedDate!.month.toString().padLeft(2, '0')}-${selectedDate!.day.toString().padLeft(2, '0')}";
+                        selectedEndDate = pickedDate;
+                        endDateController.text = DateFormat(
+                          'dd-MM-yyyy',
+                        ).format(selectedEndDate!);
                       });
                     }
                   },
