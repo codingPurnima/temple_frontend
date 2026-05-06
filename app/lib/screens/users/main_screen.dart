@@ -4,6 +4,7 @@ import 'package:app/widgets/app_drawer.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -52,7 +53,11 @@ class _MainScreenState extends State<MainScreen> {
         (route) => false,
       );
     } catch (e) {
-      print("Logout error: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Center(child: Text("Failed to logout. Please Retry")),
+        ),
+      );
     }
   }
 
@@ -65,6 +70,7 @@ class _MainScreenState extends State<MainScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text("भक्तिपथ"),
+        toolbarHeight: 75,
         actions: [
           IconButton(
             onPressed: () async {
@@ -73,6 +79,27 @@ class _MainScreenState extends State<MainScreen> {
             icon: Icon(Icons.logout_outlined),
           ),
         ],
+        bottom: PreferredSize(
+          preferredSize: Size.fromHeight(50),
+          child: Column(
+            children: [
+              SizedBox(height: 6), 
+              Material(
+                elevation: 4, 
+                child: Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.symmetric(vertical: 8),
+                  alignment: Alignment.center,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text("।। श्रीमते रामानुजाय नमः ।।", style: GoogleFonts.tiroDevanagariHindi(fontSize: 20, 
+                    fontStyle: FontStyle.italic, fontWeight: FontWeight.w700, letterSpacing: 0.5, color: Color(0xFF6D6D6D))),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
       drawer: const AppDrawer(),
 
