@@ -17,12 +17,13 @@ class _BhaktCharitraScreenState extends State<BhaktCharitraScreen> {
 
   bool isLoading = true;
   List characters = [];
+  bool hasError = true;
 
   final TextEditingController _searchController = TextEditingController();
 
   Timer? _debounce;
 
-  void _onSearchChanged(String value){
+  void _onSearchChanged(String value) {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 400), () {
       loadCharacters(search: value);
@@ -37,7 +38,10 @@ class _BhaktCharitraScreenState extends State<BhaktCharitraScreen> {
 
   Future<void> loadCharacters({String? search}) async {
     try {
-      setState(() => isLoading = true);
+      setState(() {
+        isLoading = true;
+        hasError = false; // reset error before loading
+      });
 
       final result = await _service.getCharacters(search: search);
 
@@ -46,7 +50,13 @@ class _BhaktCharitraScreenState extends State<BhaktCharitraScreen> {
         isLoading = false;
       });
     } catch (e) {
-      print("$e");
+      setState(() {
+        isLoading = false;
+        hasError = true; // 👈 important
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to load data. Try refreshing.")),
+      );
     }
   }
 
@@ -76,16 +86,13 @@ class _BhaktCharitraScreenState extends State<BhaktCharitraScreen> {
           Expanded(
             child: isLoading
                 ? const Center(child: CircularProgressIndicator())
-                : characters.isEmpty
+                : hasError
                 ? RefreshIndicator(
                     onRefresh: () =>
                         loadCharacters(search: _searchController.text),
                     child: ListView(
                       physics: const AlwaysScrollableScrollPhysics(),
-                      children: const [
-                        SizedBox(height: 300),
-                        Center(child: Text("No results found")),
-                      ],
+                      children: const [Center(child: Icon(Icons.error))],
                     ),
                   )
                 : RefreshIndicator(

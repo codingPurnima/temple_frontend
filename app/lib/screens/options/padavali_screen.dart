@@ -18,6 +18,9 @@ class _PadavaliScreenState extends State<PadavaliScreen> {
   bool isLoading = true;
   List lyrics = [];
 
+  bool hasError = false;
+  bool forceError = false;  //toggle this to check for error states
+
   final TextEditingController _searchController = TextEditingController();
 
   Timer? _debounce;
@@ -37,15 +40,26 @@ class _PadavaliScreenState extends State<PadavaliScreen> {
 
   Future<void> loadLyrics({String? search}) async {
     try {
-      setState(() => isLoading = true);
+      setState(() {
+        isLoading = true;
+        hasError = false; // reset error before loading
+      });
 
       final result = await _service.getLyrics(search: search);
+
       setState(() {
         lyrics = result;
         isLoading = false;
       });
     } catch (e) {
-      print("$e");
+      setState(() {
+        isLoading = false;
+        hasError = true; // 👈 important
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to load data. Try refreshing")),
+      );
     }
   }
 
@@ -75,15 +89,18 @@ class _PadavaliScreenState extends State<PadavaliScreen> {
           Expanded(
             child: isLoading
                 ? const Center(child: CircularProgressIndicator())
-                : lyrics.isEmpty
+                : hasError
                 ? RefreshIndicator(
                     onRefresh: () =>
                         loadLyrics(search: _searchController.text),
                     child: ListView(
                       physics: const AlwaysScrollableScrollPhysics(),
                       children: const [
-                        SizedBox(height: 300),
-                        Center(child: Text("No results found")),
+                        SizedBox(height: 150),
+                        Center(child: Icon(Icons.error_outline, size: 50)),
+                        SizedBox(height: 10),
+                        Center(child: Text("Failed to load data")),
+                        Center(child: Text("Pull down to refresh")),
                       ],
                     ),
                   )

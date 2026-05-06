@@ -14,6 +14,8 @@ class _NotificationScreenState extends State<NotificationScreen> {
   bool isLoading = true;
   List notifications = [];
 
+  bool hasError = false;
+
   @override
   void initState() {
     super.initState();
@@ -22,6 +24,11 @@ class _NotificationScreenState extends State<NotificationScreen> {
 
   Future<void> loadNotifications() async {
     try {
+      setState(() {
+        isLoading = true;
+        hasError = false; // reset error before loading
+      });
+
       final result = await _service.getDashboard();
       setState(() {
         notifications = result?["notifications"] ?? [];
@@ -30,7 +37,11 @@ class _NotificationScreenState extends State<NotificationScreen> {
     } catch (e) {
       setState(() {
         isLoading = false;
+        hasError = true;
       });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to load notifications. Try refreshing")),
+      );
     }
   }
 
@@ -40,8 +51,14 @@ class _NotificationScreenState extends State<NotificationScreen> {
       appBar: AppBar(title: const Text("सूचनाएँ")),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
-          : notifications.isEmpty
-          ? const Center(child: Text("No notifications"))
+          : hasError
+          ? RefreshIndicator(
+              onRefresh: () => loadNotifications(),
+              child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                children: const [Center(child: Icon(Icons.error))],
+              ),
+            )
           : RefreshIndicator(
               onRefresh: loadNotifications,
               child: ListView.builder(
