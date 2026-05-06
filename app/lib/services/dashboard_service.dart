@@ -14,4 +14,28 @@ class DashboardService {
     }
 
   }
+
+  Future<Map<String, dynamic>> joinEvent(int eventId) async {
+    final response = await _apiClient.postRequest(
+      "$baseUrl/events/$eventId/join",
+      {},
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception("Failed");
+    }
+  }
+  
+  Future<void> leaveEvent(int eventId) async {
+  final response = await _apiClient.delete(
+    "$baseUrl/events/$eventId/leave",
+  );
+
+  if (response.statusCode != 200) {
+    throw Exception("Failed to leave event");
+  }
 }
+}
+
