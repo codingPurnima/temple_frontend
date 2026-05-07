@@ -92,7 +92,13 @@ class _BhaktCharitraScreenState extends State<BhaktCharitraScreen> {
                         loadCharacters(search: _searchController.text),
                     child: ListView(
                       physics: const AlwaysScrollableScrollPhysics(),
-                      children: const [Center(child: Icon(Icons.error))],
+                      children: const [
+                        SizedBox(height: 150),
+                        Center(child: Icon(Icons.error_outline, size: 50)),
+                        SizedBox(height: 10),
+                        Center(child: Text("Failed to load data")),
+                        Center(child: Text("Pull down to refresh")),
+                      ],
                     ),
                   )
                 : RefreshIndicator(
