@@ -43,7 +43,7 @@ class _EditCharacterScreenState extends State<EditCharacterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Edit Character")),
+      appBar: AppBar(title: FittedBox(fit: BoxFit.scaleDown, child: const Text("Edit Character"))),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
