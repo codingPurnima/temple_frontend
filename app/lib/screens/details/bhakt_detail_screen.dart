@@ -9,8 +9,7 @@ class BhaktDetailScreen extends StatefulWidget {
   const BhaktDetailScreen({super.key, required this.characterId});
 
   @override
-  State<BhaktDetailScreen> createState() =>
-      _BhaktDetailScreenState();
+  State<BhaktDetailScreen> createState() => _BhaktDetailScreenState();
 }
 
 class _BhaktDetailScreenState extends State<BhaktDetailScreen> {
@@ -26,8 +25,7 @@ class _BhaktDetailScreenState extends State<BhaktDetailScreen> {
   }
 
   Future<void> loadCharacter() async {
-    final result =
-        await _service.getCharacterById(widget.characterId);
+    final result = await _service.getCharacterById(widget.characterId);
 
     setState(() {
       character = result;
@@ -38,40 +36,43 @@ class _BhaktDetailScreenState extends State<BhaktDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: FittedBox(fit: BoxFit.scaleDown, child: Text(character?["name"]??"")), actions: [
-        if (Session.isAdmin)
-      IconButton(
-        icon: const Icon(Icons.edit),
-        onPressed: () async {
-          final result = await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) =>
-                  EditCharacterScreen(character: character!),
-            ),
-          );
+      appBar: AppBar(
+        title: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(character?["name"] ?? ""),
+        ),
+        actions: [
+          if (Session.isAdmin)
+            IconButton(
+              icon: const Icon(Icons.edit),
+              onPressed: () async {
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => EditCharacterScreen(character: character!),
+                  ),
+                );
 
-          if (result == true) {
-            loadCharacter();
-          }
-        },
+                if (result == true) {
+                  await loadCharacter();
+                }
+              },
+            ),
+        ],
       ),
-      ],),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : character == null
-              ? const Center(child: Text("Character not found"))
-              : Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(character!["description"] ?? ""),
-                      ],
-                    ),
-                  ),
+          ? const Center(child: Text("Character not found"))
+          : Padding(
+              padding: const EdgeInsets.all(16),
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [Text(character!["description"] ?? "")],
                 ),
+              ),
+            ),
     );
   }
 }
