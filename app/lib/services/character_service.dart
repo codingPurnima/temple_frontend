@@ -44,6 +44,7 @@ class CharacterService {
   }
 
   Future<bool> updateCharacter(int id, Map<String, dynamic> body) async {
+    body.removeWhere((key, value) => value == null);
     final response = await _apiClient.patchRequest(
       "$baseUrl/characters/$id",
       body,

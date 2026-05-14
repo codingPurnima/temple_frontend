@@ -39,6 +39,7 @@ class LyricsService {
   }
 
   Future<bool> updateLyric(int id, Map<String, dynamic> body) async {
+    body.removeWhere((key, value) => value == null);
     final response = await _apiClient.patchRequest("$baseUrl/lyrics/$id", body);
 
     return response.statusCode == 200;
