@@ -15,6 +15,8 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
   List<User> users = [];
   bool isLoading = true;
 
+  bool hasError = false;
+
   @override
   void initState() {
     super.initState();
@@ -23,13 +25,19 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
 
   Future<void> fetchUsers() async {
     try {
+      setState(() {
+        hasError = false;
+      });
       final data = await ApiClient.getUsers(widget.token);
       setState(() {
         users = data;
         isLoading = false;
       });
     } catch (e) {
-      setState(() => isLoading = false);
+      setState(() {
+        isLoading = false;
+        hasError = true;
+      });
     }
   }
 
@@ -69,14 +77,27 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
 
   @override
   Widget build(BuildContext context) {
-
     return isLoading
         ? Scaffold(
             appBar: AppBar(title: Text("")),
             body: Center(child: CircularProgressIndicator()),
           )
+        : hasError
+        ? RefreshIndicator(
+            onRefresh: ()=> fetchUsers(),
+            child: ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      children: const [
+                        SizedBox(height: 150),
+                        Center(child: Icon(Icons.error_outline, size: 50)),
+                        SizedBox(height: 10),
+                        Center(child: Text("Failed to load data")),
+                        Center(child: Text("Pull down to refresh")),
+                      ],
+                    ),
+          )
         : Scaffold(
-            appBar: AppBar(title: Text("All Users")),
+            appBar: AppBar(title: Text("Make Admin")),
             body: ListView.builder(
               itemCount: users.length,
               itemBuilder: (context, index) {
@@ -92,7 +113,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                       children: [
                         Text(user.role),
                         SizedBox(width: 10),
-                        if (user.role != "ADMIN")
+                        if (user.role != "ADMIN" && user.role!= "SUPER_ADMIN")
                           ElevatedButton(
                             onPressed: () => promoteUser(user),
                             child: Text("Make Admin"),
@@ -102,7 +123,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                   ),
                 );
               },
-          ),
+            ),
           );
   }
 }
