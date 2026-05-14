@@ -47,7 +47,7 @@ class _EventsScreenState extends State<EventsScreen> {
 
   void _showEventSheet(Map event) {
     final isRegistered = event["is_registered"] == true;
-    // final status = event["registration_status"];
+    // final status = event["registration_status"]; ---- this is to maintain if you have been confirmed or waitlisted, can be used for UI differences later.
     showModalBottomSheet(
       context: context,
       isScrollControlled: true, // allows full height
