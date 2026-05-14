@@ -20,18 +20,14 @@ class _CreateCharacterScreenState extends State<CreateCharacterScreen> {
   bool isLoading = false;
 
   Future<void> submit() async {
-
     if (!_formKey.currentState!.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Please fill all required fields"),
-        ),
+        const SnackBar(content: Text("Please fill all required fields")),
       );
-      return; 
+      return;
     }
 
     setState(() => isLoading = true);
-
 
     final response = await _apiClient.postRequest("$baseUrl/characters/add", {
       "name": nameController.text.trim(),
@@ -42,17 +38,18 @@ class _CreateCharacterScreenState extends State<CreateCharacterScreen> {
 
     if (response.statusCode == 200 || response.statusCode == 201) {
       ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text("Bhakt Charitra added successfully!"),
-        backgroundColor: Colors.green,
-      ),
-    );
-      Navigator.pop(context);
+        SnackBar(
+          content: Text("Bhakt Charitra added successfully!"),
+          backgroundColor: Colors.green,
+        ),
+      );
+      nameController.clear();
+      descController.clear();
+      FocusScope.of(context).unfocus();
+      setState(() {});
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Failed to add character. Please try again."),
-        ),
+        SnackBar(content: Text("Failed to add character. Please try again.")),
       );
     }
   }
@@ -60,7 +57,9 @@ class _CreateCharacterScreenState extends State<CreateCharacterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: FittedBox(fit: BoxFit.scaleDown, child: Text("Add character")),),
+      appBar: AppBar(
+        title: FittedBox(fit: BoxFit.scaleDown, child: Text("Add character")),
+      ),
       body: Padding(
         padding: EdgeInsets.all(16),
         child: SingleChildScrollView(
@@ -79,7 +78,7 @@ class _CreateCharacterScreenState extends State<CreateCharacterScreen> {
                     return null;
                   },
                 ),
-          
+
                 const SizedBox(height: 5),
 
                 TextFormField(
@@ -93,7 +92,7 @@ class _CreateCharacterScreenState extends State<CreateCharacterScreen> {
                     return null;
                   },
                 ),
-          
+
                 const SizedBox(height: 20),
 
                 ElevatedButton(
@@ -103,7 +102,7 @@ class _CreateCharacterScreenState extends State<CreateCharacterScreen> {
                       : const Text("Submit"),
                 ),
               ],
-            )
+            ),
           ),
         ),
       ),
