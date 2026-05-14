@@ -172,8 +172,8 @@ class _BhaktCharitraScreenState extends State<BhaktCharitraScreen> {
                                   ),
                               ],
                             ),
-                            onTap: () {
-                              Navigator.push(
+                            onTap: () async {
+                              final result = await Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                   builder: (_) => BhaktDetailScreen(
@@ -181,6 +181,10 @@ class _BhaktCharitraScreenState extends State<BhaktCharitraScreen> {
                                   ),
                                 ),
                               );
+
+                              if (result == true) {
+                                loadCharacters(search: _searchController.text);
+                              }
                             },
                           ),
                         );
