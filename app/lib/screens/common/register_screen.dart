@@ -57,7 +57,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Create account")),
+      appBar: AppBar(title: FittedBox(fit: BoxFit.scaleDown, child: Text("Create account"))),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
@@ -67,11 +67,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               CircleAvatar(
                 radius: 75,
                 backgroundColor: Colors.grey[300],
-                child: const Text(
-                  "Add Logo",
-                  style: TextStyle(fontSize: 18),
-                  textAlign: TextAlign.center,
-                ),
+                backgroundImage: AssetImage('assets/images/BhaktipathYT.jpeg'),
               ),
               SizedBox(height: 30),
               Form(
@@ -185,7 +181,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ),
         ),
       ),
-      backgroundColor: const Color(0xFFDCE6F1),
+      backgroundColor: const Color(0xFFE2E8F0),
     );
   }
 }

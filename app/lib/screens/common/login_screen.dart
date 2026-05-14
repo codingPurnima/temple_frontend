@@ -66,7 +66,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 CircleAvatar(
                   radius: 75,
                   backgroundColor: Colors.grey[300],
-                  child: Text("Logo"),
+                  backgroundImage: AssetImage('assets/images/BhaktipathYT.jpeg'),
                 ),
                 SizedBox(height: 30),
                 Form(
@@ -169,7 +169,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
       ),
-      backgroundColor: const Color(0xFFDCE6F1),
+      backgroundColor: const Color(0xFFE2E8F0),
     );
   }
 }
