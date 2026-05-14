@@ -47,7 +47,7 @@ class _EventsScreenState extends State<EventsScreen> {
 
   void _showEventSheet(Map event) {
     final isRegistered = event["is_registered"] == true;
-    final status = event["registration_status"];
+    // final status = event["registration_status"];
     showModalBottomSheet(
       context: context,
       isScrollControlled: true, // allows full height
@@ -159,12 +159,12 @@ class _EventsScreenState extends State<EventsScreen> {
       final status = response["status"].toString().toLowerCase();
 
       setState(() {
-      final index = events.indexWhere((e) => e["id"] == eventId);
-      if (index != -1) {
-        events[index]["is_registered"] = true;
-        events[index]["registration_status"] = status;
-      }
-    });
+        final index = events.indexWhere((e) => e["id"] == eventId);
+        if (index != -1) {
+          events[index]["is_registered"] = true;
+          events[index]["registration_status"] = status;
+        }
+      });
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
