@@ -1,4 +1,7 @@
+import 'package:app/core/app_theme.dart';
 import 'package:app/services/profile_service.dart';
+import 'package:app/widgets/state_widgets/app_error.dart';
+import 'package:app/widgets/state_widgets/app_loading.dart';
 import 'package:flutter/material.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -13,6 +16,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   bool isLoading = true;
   Map<String, dynamic> userDetails = {};
+  bool hasError = false;
 
   @override
   void initState() {
@@ -24,81 +28,221 @@ class _ProfileScreenState extends State<ProfileScreen> {
     try {
       setState(() {
         isLoading = true;
+        hasError = false;
       });
       final result = await _service.getProfile();
+      if (!mounted) return;
       setState(() {
         userDetails = result;
         isLoading = false;
       });
     } catch (e) {
-      print("Error: $e");
+      if (!mounted) return;
+      setState(() {
+        isLoading = false;
+        hasError = true;
+      });
     }
+  }
+
+  String _getRoleDisplayName(String? role) {
+    if (role == "SUPER_ADMIN") return "गुरुदेव";
+    if (role == "ADMIN") return "परिकर";
+    if (role == "PREMIUM" || role == "PREMIUM_USER") return "शरणागत";
+    return "भक्त (Devotee)";
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("प्रोफ़ाइल")),
-      body: Column(
-        children: [
-          Expanded(
-            child: isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : userDetails.isEmpty
-                ? const Center(child: Text("Could not fetch details"))
-                : RefreshIndicator(
-                    onRefresh: () => loadProfile(),
-                    child: Center(
-                      child: Container(
-                        height: 450,
-                        width: 250,
-                        decoration: BoxDecoration(
-                          color: const Color.fromARGB(232, 220, 230, 241),
-                          borderRadius: BorderRadius.circular(15),
+      backgroundColor: AppTheme.parchmentBackground,
+      appBar: AppBar(title: const Text("भक्त प्रोफ़ाइल")),
+      body: isLoading
+          ? const AppLoadingView(message: "विवरण लोड हो रहा है...")
+          : hasError || userDetails.isEmpty
+          ? RefreshIndicator(
+              onRefresh: loadProfile,
+              child: AppErrorView(
+                title: "प्रोफ़ाइल विवरण लोड नहीं हो सका",
+                onRetry: loadProfile,
+              ),
+            )
+          : RefreshIndicator(
+              onRefresh: loadProfile,
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 30,
+                ),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 400),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(22),
+                        border: Border.all(
+                          color: AppTheme.cardBorder,
+                          width: 1.5,
                         ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(12),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [                              
-                                // Top content (can expand if needed)
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      userDetails["name"],
-                                      style: const TextStyle(fontSize: 35, fontWeight: FontWeight.bold),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(userDetails["email"], style: TextStyle(fontSize: 18, fontWeight: FontWeight.w200),),
-                                    const SizedBox(height: 8,),
-                                    Text("1234567890", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),), //temp mob no.
-                                  ],
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0x0E000000),
+                            blurRadius: 20,
+                            offset: Offset(0, 6),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Decorative Header Bar
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            decoration: const BoxDecoration(
+                              color: AppTheme.primaryNavy,
+                              borderRadius: BorderRadius.vertical(
+                                top: Radius.circular(20),
+                              ),
+                              border: Border(
+                                bottom: BorderSide(
+                                  color: AppTheme.warmGold,
+                                  width: 2.5,
                                 ),
-                                // Bottom role section
-                                Align(
-                                  alignment: Alignment.bottomRight,
+                              ),
+                            ),
+                            alignment: Alignment.center,
+                            child: const Text(
+                              "॥ भक्तिपथ परिचय पत्र ॥",
+                              style: TextStyle(
+                                fontFamily: 'TiroDevanagariHindi',
+                                color: AppTheme.warmGoldLight,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1,
+                              ),
+                            ),
+                          ),
+
+                          Padding(
+                            padding: const EdgeInsets.all(24),
+                            child: Column(
+                              children: [
+                                // Devotee Avatar
+                                Container(
+                                  width: 80,
+                                  height: 80,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: AppTheme.saffronLight,
+                                    border: Border.all(
+                                      color: AppTheme.warmGold,
+                                      width: 2,
+                                    ),
+                                  ),
+                                  alignment: Alignment.center,
                                   child: Text(
-                                    userDetails["role"] == "SUPER_ADMIN"
-                                        ? "गुरुदेव"
-                                        : userDetails["role"] == "ADMIN"
-                                            ? "परिकर"
-                                            : userDetails["role"] == "PREMIUM"
-                                                ? "शरणागत"
-                                                : "",
-                                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 45),
+                                    (userDetails["name"] != null &&
+                                            userDetails["name"]
+                                                .toString()
+                                                .isNotEmpty)
+                                        ? userDetails["name"]
+                                              .toString()
+                                              .substring(0, 1)
+                                              .toUpperCase()
+                                        : "भ",
+                                    style: const TextStyle(
+                                      fontFamily: 'TiroDevanagariHindi',
+                                      fontSize: 34,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppTheme.saffronAccent,
+                                    ),
+                                  ),
+                                ),
+
+                                const SizedBox(height: 16),
+
+                                // Name
+                                Text(
+                                  userDetails["name"] ?? "",
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    fontFamily: 'TiroDevanagariHindi',
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppTheme.textPrimary,
+                                  ),
+                                ),
+
+                                const SizedBox(height: 6),
+
+                                // Email
+                                Text(
+                                  userDetails["email"] ?? "",
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    color: AppTheme.textSecondary,
+                                  ),
+                                ),
+
+                                const SizedBox(height: 20),
+                                const Divider(
+                                  color: AppTheme.cardBorder,
+                                  height: 1,
+                                ),
+                                const SizedBox(height: 20),
+
+                                // Role Seal
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 20,
+                                    vertical: 10,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.saffronLight,
+                                    borderRadius: BorderRadius.circular(30),
+                                    border: Border.all(
+                                      color: AppTheme.warmGoldLight,
+                                      width: 1.2,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(
+                                        Icons.verified_rounded,
+                                        color: AppTheme.saffronAccent,
+                                        size: 20,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        _getRoleDisplayName(
+                                          userDetails["role"],
+                                        ),
+                                        style: const TextStyle(
+                                          fontFamily: 'TiroDevanagariHindi',
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                          color: AppTheme.saffronAccent,
+                                          letterSpacing: 0.5,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ],
                             ),
                           ),
-                        ),
-                     ),
+                        ],
+                      ),
                     ),
-          ),
-        ],
-      ),
+                  ),
+                ),
+              ),
+            ),
     );
   }
 }

@@ -1,4 +1,8 @@
+import 'package:app/core/app_theme.dart';
 import 'package:app/services/dashboard_service.dart';
+import 'package:app/widgets/state_widgets/app_empty.dart';
+import 'package:app/widgets/state_widgets/app_error.dart';
+import 'package:app/widgets/state_widgets/app_loading.dart';
 import 'package:flutter/material.dart';
 
 class NotificationScreen extends StatefulWidget {
@@ -13,7 +17,6 @@ class _NotificationScreenState extends State<NotificationScreen> {
 
   bool isLoading = true;
   List notifications = [];
-
   bool hasError = false;
 
   @override
@@ -26,21 +29,25 @@ class _NotificationScreenState extends State<NotificationScreen> {
     try {
       setState(() {
         isLoading = true;
-        hasError = false; // reset error before loading
+        hasError = false;
       });
 
       final result = await _service.getDashboard();
+      if (!mounted) return;
       setState(() {
         notifications = result?["notifications"] ?? [];
         isLoading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         isLoading = false;
         hasError = true;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Failed to load notifications. Try refreshing")),
+        const SnackBar(
+          content: Text("Failed to load notifications. Try refreshing"),
+        ),
       );
     }
   }
@@ -48,28 +55,86 @@ class _NotificationScreenState extends State<NotificationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppTheme.parchmentBackground,
       appBar: AppBar(title: const Text("सूचनाएँ")),
       body: isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const AppLoadingView(message: "सूचनाएँ लोड हो रही हैं...")
           : hasError
           ? RefreshIndicator(
               onRefresh: () => loadNotifications(),
-              child: ListView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                children: const [Center(child: Icon(Icons.error))],
+              child: AppErrorView(onRetry: () => loadNotifications()),
+            )
+          : notifications.isEmpty
+          ? RefreshIndicator(
+              onRefresh: () => loadNotifications(),
+              child: const AppEmptyView(
+                icon: Icons.notifications_none_rounded,
+                title: "कोई नई सूचना नहीं है",
+                subtitle: "नई सूचनाएँ आने पर यहाँ प्रदर्शित होंगी",
               ),
             )
           : RefreshIndicator(
               onRefresh: loadNotifications,
               child: ListView.builder(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 itemCount: notifications.length,
                 itemBuilder: (context, index) {
                   final notif = notifications[index];
+                  final message = notif["message"] ?? "";
 
-                  return ListTile(
-                    leading: const Icon(Icons.notifications),
-                    title: Text(notif["message"] ?? ""),
+                  return Card(
+                    margin: const EdgeInsets.only(bottom: 10),
+                    elevation: 0.5,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      side: const BorderSide(
+                        color: AppTheme.cardBorder,
+                        width: 1,
+                      ),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(14),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: AppTheme.saffronLight,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: AppTheme.warmGoldLight),
+                            ),
+                            child: const Icon(
+                              Icons.notifications_active_outlined,
+                              size: 20,
+                              color: AppTheme.saffronAccent,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  message,
+                                  style: const TextStyle(
+                                    fontFamily: 'TiroDevanagariHindi',
+                                    fontSize: 15,
+                                    height: 1.5,
+                                    color: AppTheme.textPrimary,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   );
                 },
               ),

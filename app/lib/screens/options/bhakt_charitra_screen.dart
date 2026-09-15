@@ -1,7 +1,11 @@
 import 'dart:async';
-
+import 'package:app/core/app_theme.dart';
 import 'package:app/helper/session.dart';
 import 'package:app/screens/details/bhakt_detail_screen.dart';
+import 'package:app/widgets/state_widgets/app_empty.dart';
+import 'package:app/widgets/state_widgets/app_error.dart';
+import 'package:app/widgets/state_widgets/app_loading.dart';
+import 'package:app/widgets/state_widgets/app_search.dart';
 import 'package:flutter/material.dart';
 import '../../services/character_service.dart';
 
@@ -17,10 +21,9 @@ class _BhaktCharitraScreenState extends State<BhaktCharitraScreen> {
 
   bool isLoading = true;
   List characters = [];
-  bool hasError = true;
+  bool hasError = false;
 
   final TextEditingController _searchController = TextEditingController();
-
   Timer? _debounce;
 
   void _onSearchChanged(String value) {
@@ -36,26 +39,35 @@ class _BhaktCharitraScreenState extends State<BhaktCharitraScreen> {
     loadCharacters();
   }
 
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _searchController.dispose();
+    super.dispose();
+  }
+
   Future<void> loadCharacters({String? search}) async {
     try {
       setState(() {
         isLoading = true;
-        hasError = false; // reset error before loading
+        hasError = false;
       });
 
       final result = await _service.getCharacters(search: search);
 
+      if (!mounted) return;
       setState(() {
         characters = result;
         isLoading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         isLoading = false;
-        hasError = true; // 👈 important
+        hasError = true;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Failed to load data. Try refreshing.")),
+        const SnackBar(content: Text("Failed to load data. Try refreshing.")),
       );
     }
   }
@@ -63,105 +75,154 @@ class _BhaktCharitraScreenState extends State<BhaktCharitraScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppTheme.parchmentBackground,
       appBar: AppBar(title: const Text("भक्त चरित्र")),
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(10),
-            child: TextField(
-              controller: _searchController,
-              onChanged: _onSearchChanged,
-              decoration: InputDecoration(
-                hintText: "Search",
-                suffixIcon: IconButton(
-                  icon: const Icon(Icons.search),
-                  onPressed: () {
-                    loadCharacters(search: _searchController.text);
-                  },
-                ),
-              ),
-            ),
+          AppSearchBar(
+            controller: _searchController,
+            hintText: "भक्त का नाम खोजें...",
+            onChanged: _onSearchChanged,
+            onClear: () => loadCharacters(),
+            onSearch: () => loadCharacters(search: _searchController.text),
           ),
-
           Expanded(
             child: isLoading
-                ? const Center(child: CircularProgressIndicator())
+                ? const AppLoadingView(message: "चरित्र लोड हो रहे हैं...")
                 : hasError
                 ? RefreshIndicator(
                     onRefresh: () =>
                         loadCharacters(search: _searchController.text),
-                    child: ListView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      children: const [
-                        SizedBox(height: 150),
-                        Center(child: Icon(Icons.error_outline, size: 50)),
-                        SizedBox(height: 10),
-                        Center(child: Text("Failed to load data")),
-                        Center(child: Text("Pull down to refresh")),
-                      ],
+                    child: AppErrorView(
+                      onRetry: () =>
+                          loadCharacters(search: _searchController.text),
+                    ),
+                  )
+                : characters.isEmpty
+                ? RefreshIndicator(
+                    onRefresh: () => loadCharacters(),
+                    child: const AppEmptyView(
+                      icon: Icons.auto_stories_outlined,
+                      title: "कोई भक्त चरित्र नहीं मिला",
+                      subtitle: "अन्य नाम से खोजें अथवा पृष्ठ को रिफ्रेश करें",
                     ),
                   )
                 : RefreshIndicator(
                     onRefresh: () => loadCharacters(),
                     child: ListView.builder(
-                      physics: AlwaysScrollableScrollPhysics(),
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 6,
+                      ),
                       itemCount: characters.length,
                       itemBuilder: (context, index) {
                         final char = characters[index];
+                        final name = char["name"] ?? "";
+                        final initial = name.isNotEmpty
+                            ? name.substring(0, 1)
+                            : "भ";
 
                         return Card(
+                          margin: const EdgeInsets.only(bottom: 10),
+                          elevation: 0.5,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            side: const BorderSide(
+                              color: AppTheme.cardBorder,
+                              width: 1,
+                            ),
+                          ),
                           child: ListTile(
-                            title: Text(char["name"] ?? ""),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 6,
+                            ),
+                            leading: Container(
+                              width: 44,
+                              height: 44,
+                              decoration: BoxDecoration(
+                                color: AppTheme.saffronLight,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: AppTheme.warmGoldLight,
+                                ),
+                              ),
+                              alignment: Alignment.center,
+                              child: Text(
+                                initial,
+                                style: const TextStyle(
+                                  fontFamily: 'TiroDevanagariHindi',
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 18,
+                                  color: AppTheme.saffronAccent,
+                                ),
+                              ),
+                            ),
+                            title: Text(
+                              name,
+                              style: const TextStyle(
+                                fontFamily: 'TiroDevanagariHindi',
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                color: AppTheme.textPrimary,
+                              ),
+                            ),
                             trailing: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                // 👑 DELETE button
                                 if (Session.isAdmin)
                                   IconButton(
+                                    tooltip: "Delete",
                                     icon: const Icon(
-                                      Icons.delete,
-                                      color: Colors.red,
+                                      Icons.delete_outline_rounded,
+                                      color: AppTheme.errorRed,
+                                      size: 22,
                                     ),
                                     onPressed: () async {
                                       final confirm = await showDialog<bool>(
                                         context: context,
                                         builder: (_) => AlertDialog(
-                                          title: const Text("Delete"),
-                                          content: const Text(
-                                            "Delete this character?",
+                                          title: const Text("चरित्र हटाएं"),
+                                          content: Text(
+                                            "क्या आप सचमुच '$name' चरित्र हटाना चाहते हैं?",
                                           ),
                                           actions: [
                                             TextButton(
                                               onPressed: () =>
                                                   Navigator.pop(context, false),
-                                              child: const Text("Cancel"),
+                                              child: const Text("रद्द करें"),
                                             ),
                                             ElevatedButton(
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor:
+                                                    AppTheme.errorRed,
+                                              ),
                                               onPressed: () =>
                                                   Navigator.pop(context, true),
-                                              child: const Text("Delete"),
+                                              child: const Text("हटाएं"),
                                             ),
                                           ],
                                         ),
                                       );
 
                                       if (confirm == true) {
+                                        final messenger = ScaffoldMessenger.of(
+                                          context,
+                                        );
                                         final success = await _service
                                             .deleteCharacter(char["id"]);
 
+                                        if (!mounted) return;
                                         if (success) {
-                                          ScaffoldMessenger.of(
-                                            context,
-                                          ).showSnackBar(
+                                          messenger.showSnackBar(
                                             const SnackBar(
                                               content: Text("Deleted"),
                                             ),
                                           );
                                           loadCharacters();
                                         } else {
-                                          ScaffoldMessenger.of(
-                                            context,
-                                          ).showSnackBar(
+                                          messenger.showSnackBar(
                                             const SnackBar(
                                               content: Text("Failed"),
                                             ),
@@ -170,6 +231,11 @@ class _BhaktCharitraScreenState extends State<BhaktCharitraScreen> {
                                       }
                                     },
                                   ),
+                                const Icon(
+                                  Icons.chevron_right_rounded,
+                                  color: AppTheme.textMuted,
+                                  size: 20,
+                                ),
                               ],
                             ),
                             onTap: () async {

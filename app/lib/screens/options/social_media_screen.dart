@@ -1,3 +1,4 @@
+import 'package:app/core/app_theme.dart';
 import 'package:app/widgets/section_title.dart';
 import 'package:app/widgets/social_item.dart';
 import 'package:flutter/material.dart';
@@ -8,8 +9,12 @@ class SocialMediaScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Social Media Links")),
+      backgroundColor: AppTheme.parchmentBackground,
+      appBar: AppBar(
+        title: const Text("सोशल मीडिया"),
+      ),
       body: ListView(
+        padding: const EdgeInsets.only(bottom: 24),
         children: const [
           SectionTitle(title: "YouTube"),
           SocialItem(
@@ -42,7 +47,7 @@ class SocialMediaScreen extends StatelessWidget {
             url: "https://facebook.com/indreshjiofficial",
           ),
 
-          SectionTitle(title: "Twitter"),
+          SectionTitle(title: "X (Twitter)"),
           SocialItem(
             title: "Indresh Upadhyay",
             image: "assets/images/BhaktipathYT.jpeg",

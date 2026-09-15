@@ -1,6 +1,10 @@
 import 'dart:async';
-
+import 'package:app/core/app_theme.dart';
 import 'package:app/screens/details/pad_screen.dart';
+import 'package:app/widgets/state_widgets/app_empty.dart';
+import 'package:app/widgets/state_widgets/app_error.dart';
+import 'package:app/widgets/state_widgets/app_loading.dart';
+import 'package:app/widgets/state_widgets/app_search.dart';
 import 'package:flutter/material.dart';
 import '../../services/lyrics_service.dart';
 import 'package:app/helper/session.dart';
@@ -17,12 +21,9 @@ class _PadavaliScreenState extends State<PadavaliScreen> {
 
   bool isLoading = true;
   List lyrics = [];
-
   bool hasError = false;
-  bool forceError = false;  //toggle this to check for error states
 
   final TextEditingController _searchController = TextEditingController();
-
   Timer? _debounce;
 
   void _onSearchChanged(String value) {
@@ -38,27 +39,36 @@ class _PadavaliScreenState extends State<PadavaliScreen> {
     loadLyrics();
   }
 
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _searchController.dispose();
+    super.dispose();
+  }
+
   Future<void> loadLyrics({String? search}) async {
     try {
       setState(() {
         isLoading = true;
-        hasError = false; // reset error before loading
+        hasError = false;
       });
 
       final result = await _service.getLyrics(search: search);
 
+      if (!mounted) return;
       setState(() {
         lyrics = result;
         isLoading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         isLoading = false;
-        hasError = true; // 👈 important
+        hasError = true;
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Failed to load data. Try refreshing")),
+        const SnackBar(content: Text("Failed to load data. Try refreshing")),
       );
     }
   }
@@ -66,97 +76,150 @@ class _PadavaliScreenState extends State<PadavaliScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppTheme.parchmentBackground,
       appBar: AppBar(title: const Text("पदावली")),
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(10),
-            child: TextField(
-              controller: _searchController,
-              onChanged: _onSearchChanged,
-              decoration: InputDecoration(
-                hintText: "Search",
-                suffixIcon: IconButton(
-                  icon: Icon(Icons.search),
-                  onPressed: () {
-                    loadLyrics(search: _searchController.text);
-                  },
-                ),
-              ),
-            ),
+          AppSearchBar(
+            controller: _searchController,
+            hintText: "पद अथवा रचयिता खोजें...",
+            onChanged: _onSearchChanged,
+            onClear: () => loadLyrics(),
+            onSearch: () => loadLyrics(search: _searchController.text),
           ),
-
           Expanded(
             child: isLoading
-                ? const Center(child: CircularProgressIndicator())
+                ? const AppLoadingView(message: "पद लोड हो रहे हैं...")
                 : hasError
                 ? RefreshIndicator(
-                    onRefresh: () =>
-                        loadLyrics(search: _searchController.text),
-                    child: ListView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      children: const [
-                        SizedBox(height: 150),
-                        Center(child: Icon(Icons.error_outline, size: 50)),
-                        SizedBox(height: 10),
-                        Center(child: Text("Failed to load data")),
-                        Center(child: Text("Pull down to refresh")),
-                      ],
+                    onRefresh: () => loadLyrics(search: _searchController.text),
+                    child: AppErrorView(
+                      onRetry: () => loadLyrics(search: _searchController.text),
+                    ),
+                  )
+                : lyrics.isEmpty
+                ? RefreshIndicator(
+                    onRefresh: () => loadLyrics(),
+                    child: const AppEmptyView(
+                      icon: Icons.music_note_rounded,
+                      title: "कोई पद नहीं मिला",
+                      subtitle: "अन्य शब्द से खोजें अथवा पृष्ठ को रिफ्रेश करें",
                     ),
                   )
                 : RefreshIndicator(
                     onRefresh: () => loadLyrics(search: _searchController.text),
                     child: ListView.builder(
                       physics: const AlwaysScrollableScrollPhysics(),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 6,
+                      ),
                       itemCount: lyrics.length,
                       itemBuilder: (context, index) {
                         final lyric = lyrics[index];
+                        final title = lyric["title"] ?? "";
+                        final author = lyric["author"] ?? "";
 
                         return Card(
+                          margin: const EdgeInsets.only(bottom: 10),
+                          elevation: 0.5,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            side: const BorderSide(
+                              color: AppTheme.cardBorder,
+                              width: 1,
+                            ),
+                          ),
                           child: ListTile(
-                            title: Text(lyric["title"] ?? ""),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 6,
+                            ),
+                            leading: Container(
+                              width: 44,
+                              height: 44,
+                              decoration: BoxDecoration(
+                                color: AppTheme.saffronLight,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: AppTheme.warmGoldLight,
+                                ),
+                              ),
+                              child: const Icon(
+                                Icons.music_note_rounded,
+                                color: AppTheme.saffronAccent,
+                                size: 22,
+                              ),
+                            ),
+                            title: Text(
+                              title,
+                              style: const TextStyle(
+                                fontFamily: 'TiroDevanagariHindi',
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                color: AppTheme.textPrimary,
+                              ),
+                            ),
+                            subtitle: author.toString().trim().isNotEmpty
+                                ? Padding(
+                                    padding: const EdgeInsets.only(top: 4),
+                                    child: Text(
+                                      "रचयिता: $author",
+                                      style: const TextStyle(
+                                        fontFamily: 'TiroDevanagariHindi',
+                                        fontSize: 13,
+                                        color: AppTheme.textSecondary,
+                                      ),
+                                    ),
+                                  )
+                                : null,
                             trailing: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                // 👤 Author (for everyone)
-                                Text(lyric["author"] ?? ""),
-                                // 👑 DELETE button (admin only)
                                 if (Session.isAdmin)
                                   IconButton(
+                                    tooltip: "Delete",
                                     icon: const Icon(
-                                      Icons.delete,
-                                      color: Colors.red,
+                                      Icons.delete_outline_rounded,
+                                      color: AppTheme.errorRed,
+                                      size: 22,
                                     ),
                                     onPressed: () async {
                                       final confirm = await showDialog<bool>(
                                         context: context,
                                         builder: (context) => AlertDialog(
-                                          title: const Text("Delete"),
-                                          content: const Text(
-                                            "Are you sure you want to delete this?",
+                                          title: const Text("पद हटाएं"),
+                                          content: Text(
+                                            "क्या आप सचमुच '$title' पद हटाना चाहते हैं?",
                                           ),
                                           actions: [
                                             TextButton(
                                               onPressed: () =>
                                                   Navigator.pop(context, false),
-                                              child: const Text("Cancel"),
+                                              child: const Text("रद्द करें"),
                                             ),
                                             ElevatedButton(
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor:
+                                                    AppTheme.errorRed,
+                                              ),
                                               onPressed: () =>
                                                   Navigator.pop(context, true),
-                                              child: const Text("Delete"),
+                                              child: const Text("हटाएं"),
                                             ),
                                           ],
                                         ),
                                       );
 
                                       if (confirm == true) {
+                                        final messenger = ScaffoldMessenger.of(
+                                          context,
+                                        );
                                         final success = await _service
                                             .deleteLyric(lyric["id"]);
+                                        if (!mounted) return;
                                         if (success) {
-                                          ScaffoldMessenger.of(
-                                            context,
-                                          ).showSnackBar(
+                                          messenger.showSnackBar(
                                             const SnackBar(
                                               content: Text(
                                                 "Deleted successfully",
@@ -165,9 +228,7 @@ class _PadavaliScreenState extends State<PadavaliScreen> {
                                           );
                                           loadLyrics();
                                         } else {
-                                          ScaffoldMessenger.of(
-                                            context,
-                                          ).showSnackBar(
+                                          messenger.showSnackBar(
                                             const SnackBar(
                                               content: Text("Delete failed"),
                                             ),
@@ -176,6 +237,11 @@ class _PadavaliScreenState extends State<PadavaliScreen> {
                                       }
                                     },
                                   ),
+                                const Icon(
+                                  Icons.chevron_right_rounded,
+                                  color: AppTheme.textMuted,
+                                  size: 20,
+                                ),
                               ],
                             ),
                             onTap: () {
