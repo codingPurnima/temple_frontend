@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:app/helper/session.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../core/constants.dart';
@@ -137,5 +138,6 @@ class AuthService {
     await storage.deleteAll();
     _accessToken = null;
     _refreshToken = null;
+    Session.clear();
   }
 }
