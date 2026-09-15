@@ -1,3 +1,4 @@
+import 'package:app/core/app_theme.dart';
 import 'package:app/screens/admins/create_events_screen.dart';
 import 'package:app/screens/admins/manage_users_screen.dart';
 import 'package:app/screens/common/login_screen.dart';
@@ -15,119 +16,116 @@ class AdminPanelScreen extends StatefulWidget {
 }
 
 class _AdminPanelScreenState extends State<AdminPanelScreen> {
-
   Future<void> _handleLogout(BuildContext context) async {
     final shouldLogout = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Confirm Logout'),
-          content: const Text('Are you sure you want to logout?'),
+          title: const Text('प्रस्थान की पुष्टि / Confirm Logout'),
+          content: const Text('क्या आप लॉगआउट करना चाहते हैं?'),
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(false); // cancel
+                Navigator.of(context).pop(false);
               },
-              child: const Text('Cancel'),
+              child: const Text('रद्द करें / Cancel'),
             ),
             ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop(true); // confirm
-              },
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color.fromARGB(255, 6, 24, 39),
+                backgroundColor: AppTheme.errorRed,
+                foregroundColor: Colors.white,
               ),
-              child: const Text(
-                'Logout',
-                style: TextStyle(color: Colors.white),
-              ),
+              onPressed: () {
+                Navigator.of(context).pop(true);
+              },
+              child: const Text('Logout'),
             ),
           ],
         );
       },
     );
     if (shouldLogout != true) return;
+    final navigator = Navigator.of(context);
     try {
       await AuthService().logout();
 
       if (!mounted) return;
 
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => LoginScreen()),
+      navigator.pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
         (route) => false,
       );
-    } catch (e) {
-      print("Logout error: $e");
-    }
+    } catch (_) {}
   }
 
   @override
   Widget build(BuildContext context) {
-    final token = AuthService.accessToken!;
+    final token = AuthService.accessToken ?? "";
     return Scaffold(
+      backgroundColor: AppTheme.parchmentBackground,
       appBar: AppBar(
-        title: FittedBox(fit: BoxFit.scaleDown, child: Text("भक्तिपथ- Admin")),
+        title: const Text("प्रशासन / Admin Panel"),
         actions: [
           IconButton(
+            tooltip: "Logout",
             onPressed: () async {
               await _handleLogout(context);
             },
-            icon: Icon(Icons.logout_outlined),
+            icon: const Icon(Icons.logout_rounded, size: 22),
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: GridView.count(
-          crossAxisCount: 2,
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
-          children: [
-            AdminCard(
-              title: "Add Lyrics",
-              icon: Icons.music_note,
-              color: Colors.deepPurple,
-              screen: CreateLyricsScreen(),
-            ),
-            AdminCard(
-              title: "Add Character",
-              icon: Icons.person,
-              color: Colors.teal,
-              screen: CreateCharacterScreen(),
-            ),
-            AdminCard(
-              title: "Make Admin",
-              icon: Icons.add_moderator_outlined,
-              color: Colors.cyan,
-              screen: ManageUsersScreen(token: token,),
-            ),
-            AdminCard(
-              title: "Add Event",
-              icon: Icons.event_available,
-              color: Color(0xFF1E3A8A),
-              screen: CreateEventsScreen(),
-            ),
-            AdminCard(
-              title: "View Participants",
-              icon: Icons.people_rounded,
-              color: Color(0xFFF59E0B),
-              screen: CreateCharacterScreen(),
-            ),
-            AdminCard(
-              title: "Add quote",
-              icon: Icons.join_full,
-              color: Color.fromARGB(255, 65, 163, 195),
-              screen: CreateCharacterScreen(),
-            ),
-            AdminCard(
-              title: "Add sampradaya information",
-              icon: Icons.list_alt,
-              color: Color.fromARGB(255, 65, 163, 195),
-              screen: CreateCharacterScreen(),
-            ),
-          ],
-        ),
+      body: GridView.count(
+        padding: const EdgeInsets.all(18),
+        crossAxisCount: 2,
+        crossAxisSpacing: 14,
+        mainAxisSpacing: 14,
+        childAspectRatio: 1.1,
+        children: [
+          const AdminCard(
+            title: "Add Lyrics\n(पद जोड़ें)",
+            icon: Icons.music_note_rounded,
+            color: AppTheme.saffronAccent,
+            screen: CreateLyricsScreen(),
+          ),
+          const AdminCard(
+            title: "Add Character\n(चरित्र जोड़ें)",
+            icon: Icons.person_add_alt_1_rounded,
+            color: Color(0xFF2E7D32),
+            screen: CreateCharacterScreen(),
+          ),
+          AdminCard(
+            title: "Manage Users\n(उपयोगकर्ता)",
+            icon: Icons.admin_panel_settings_rounded,
+            color: const Color(0xFF0284C7),
+            screen: ManageUsersScreen(token: token),
+          ),
+          const AdminCard(
+            title: "Add Event\n(उत्सव जोड़ें)",
+            icon: Icons.event_available_rounded,
+            color: Color(0xFF4F46E5),
+            screen: CreateEventsScreen(),
+          ),
+          const AdminCard(
+            title: "View Participants\n(प्रतिभागी)",
+            icon: Icons.people_alt_rounded,
+            color: AppTheme.warmGold,
+            screen: CreateCharacterScreen(),
+          ),
+          const AdminCard(
+            title: "Add Quote\n(सुविचार)",
+            icon: Icons.format_quote_rounded,
+            color: Color(0xFF7C3AED),
+            screen: CreateCharacterScreen(),
+          ),
+          const AdminCard(
+            title: "Sampradaya\n(संप्रदाय विवरण)",
+            icon: Icons.menu_book_rounded,
+            color: Color(0xFFC2410C),
+            screen: CreateCharacterScreen(),
+          ),
+        ],
       ),
     );
   }
