@@ -1,63 +1,126 @@
 import 'dart:convert';
-import 'package:app/helper/session.dart';
-import 'package:http/http.dart' as http;
+
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:http/http.dart' as http;
+
 import '../core/constants.dart';
 
 class AuthService {
-  static String? _accessToken;
-  static String? _refreshToken;
+  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
+  final FlutterSecureStorage storage = const FlutterSecureStorage();
 
-  Future<String?>? _refreshFuture;
+  static String? _firebaseIdToken;
 
-  final storage = const FlutterSecureStorage();
+  static String? get accessToken => _firebaseIdToken;
 
-  static String? get accessToken => _accessToken;
-  static String? get refreshToken => _refreshToken;
+  /// Loads the currently signed-in Firebase user's token.
+  ///
+  /// Firebase itself manages the persistent authentication session.
+  /// We don't need to manually restore a refresh token.
+  Future<void> loadToken() async {
+    final user = _firebaseAuth.currentUser;
 
-  static bool get isLoggedIn => _accessToken != null;
+    if (user == null) {
+      _firebaseIdToken = null;
+      return;
+    }
 
-  Future<void> loadTokens() async {
-    _accessToken = await storage.read(key: "access_token");
-    _refreshToken = await storage.read(key: "refresh_token");
+    _firebaseIdToken = await user.getIdToken();
   }
 
   Future<String?> getRole() async {
     return await storage.read(key: "role");
   }
 
-  Future<Map<String, dynamic>> login(String email, String password) async {
-    final url = Uri.parse("$baseUrl/auth/login");
+  Future<Map<String, dynamic>> login(
+    String email,
+    String password,
+  ) async {
+    try {
+      final credential = await _firebaseAuth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
 
-    final response = await http.post(
-      url,
-      headers: {"Content-Type": "application/x-www-form-urlencoded"},
-      body: {"username": email, "password": password},
-    );
+      final user = credential.user;
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
+      if (user == null) {
+        return {
+          "success": false,
+          "error": "User not found",
+        };
+      }
 
-      await Future.wait([
-        storage.write(key: "access_token", value: data["access_token"]),
-        storage.write(key: "refresh_token", value: data["refresh_token"]),
-      ]);
-      _accessToken = data["access_token"];
-      _refreshToken = data["refresh_token"];
+      // Firebase may have refreshed the user's state.
+      await user.reload();
+      final currentUser = _firebaseAuth.currentUser;
+
+      if (currentUser == null) {
+        return {
+          "success": false,
+          "error": "User session unavailable",
+        };
+      }
+
+      if (!currentUser.emailVerified) {
+        return {
+          "success": false,
+          "error": "Please verify your email first.",
+          "email_not_verified": true,
+        };
+      }
+
+      final idToken = await currentUser.getIdToken();
+
+      if (idToken == null) {
+        return {
+          "success": false,
+          "error": "Authentication token missing",
+        };
+      }
+
+      _firebaseIdToken = idToken;
 
       final profileResponse = await http.get(
         Uri.parse("$baseUrl/auth/me"),
-        headers: {"Authorization": "Bearer ${data["access_token"]}"},
+        headers: {
+          "Authorization": "Bearer $idToken",
+        },
       );
 
-      if (profileResponse.statusCode == 200) {
-        final profile = jsonDecode(profileResponse.body);
-        await storage.write(key: "role", value: profile["role"]);
+      if (profileResponse.statusCode != 200) {
+        return {
+          "success": false,
+          "error": profileResponse.body,
+        };
       }
 
-      return {"success": true, "data": data};
-    } else {
-      return {"success": false, "error": response.body};
+      final profile = jsonDecode(profileResponse.body);
+
+      await storage.write(
+        key: "role",
+        value: profile["role"],
+      );
+
+      return {
+        "success": true,
+        "data": profile,
+      };
+    } on FirebaseAuthException catch (e) {
+      print("Firebase login error: ${e.code}");
+
+      return {
+        "success": false,
+        "error": e.code,
+      };
+    } catch (e) {
+      print("Login error: $e");
+
+      return {
+        "success": false,
+        "error": e.toString(),
+      };
     }
   }
 
@@ -66,78 +129,80 @@ class AuthService {
     required String email,
     required String password,
   }) async {
-    final response = await http.post(
-      Uri.parse("$baseUrl/auth/register"),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({"name": name, "email": email, "password": password}),
-    );
-    return response.statusCode == 201 || response.statusCode == 200;
-  }
-
-  Future<String?> getAccessToken() async {
-    return await storage.read(key: "access_token");
-  }
-
-  Future<String?> getRefreshToken() async {
-    return await storage.read(key: "refresh_token");
-  }
-
-  Future<String?> refreshAccessToken() async {
-    if (_refreshFuture != null) {
-      return _refreshFuture!;
-    }
-
-    _refreshFuture = _doRefresh();
-    return _refreshFuture;
-  }
-
-  Future<String?> _doRefresh() async {
-    // use memory first
     try {
-      String? refreshToken = _refreshToken;
+      final credential = await _firebaseAuth
+          .createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
 
-      refreshToken ??= await storage.read(key: "refresh_token");
+      final firebaseUser = credential.user;
 
-      if (refreshToken == null) return null;
+      if (firebaseUser == null) {
+        return false;
+      }
+
+      await firebaseUser.sendEmailVerification();
+
+      final idToken = await firebaseUser.getIdToken();
+
+      if (idToken == null) {
+        return false;
+      }
 
       final response = await http.post(
-        Uri.parse("$baseUrl/auth/refresh"),
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({"refresh_token": refreshToken}),
+        Uri.parse("$baseUrl/auth/profile"),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $idToken",
+        },
+        body: jsonEncode({
+          "name": name,
+        }),
       );
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final newAccessToken = data["access_token"];
-        final newRefreshToken = data["refresh_token"];
+        await _firebaseAuth.signOut();
+        _firebaseIdToken = null;
 
-        await storage.write(key: "access_token", value: newAccessToken);
-        await storage.write(key: "refresh_token", value: newRefreshToken);
-
-        // update memory
-        _accessToken = newAccessToken;
-        _refreshToken = newRefreshToken;
-
-        return newAccessToken;
+        return true;
       }
-      return null;
-    } finally {
-      _refreshFuture = null;
+
+      print("Profile creation failed: ${response.body}");
+      return false;
+    } on FirebaseAuthException catch (e) {
+      print("Firebase registration error: ${e.code}");
+      return false;
+    } catch (e) {
+      print("Registration error: $e");
+      return false;
     }
   }
 
-  Future<void> logout() async {
-    final token = _accessToken;
-    if (token != null) {
-      await http.post(
-        Uri.parse("$baseUrl/auth/logout"),
-        headers: {"Authorization": "Bearer $token"},
-      );
+  /// Gets a fresh Firebase ID token.
+  ///
+  /// Firebase handles token refresh internally.
+  /// forceRefresh = false allows Firebase to reuse a valid token.
+  Future<String?> getAccessToken() async {
+    final user = _firebaseAuth.currentUser;
+
+    if (user == null) {
+      _firebaseIdToken = null;
+      return null;
     }
 
-    await storage.deleteAll();
-    _accessToken = null;
-    _refreshToken = null;
-    Session.clear();
+    final token = await user.getIdToken();
+
+    _firebaseIdToken = token;
+
+    return token;
+  }
+
+  Future<void> logout() async {
+    await _firebaseAuth.signOut();
+
+    _firebaseIdToken = null;
+
+    await storage.delete(key: "role");
   }
 }
