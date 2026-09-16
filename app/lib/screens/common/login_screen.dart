@@ -3,7 +3,6 @@ import 'package:app/helper/session.dart';
 import 'package:app/screens/common/register_screen.dart';
 import 'package:app/screens/users/main_screen.dart';
 import 'package:app/services/auth_service.dart';
-import 'package:app/services/profile_service.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
@@ -43,22 +42,18 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
 
       if (result["success"]) {
-        final accessToken = await authService.getAccessToken();
+        final profile = result["data"];
 
-        if (accessToken != null) {
-          final profile = await ProfileService().getProfile();
-          Session.role = profile["role"];
-          if (!mounted) return;
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const MainScreen()),
-          );
-        } else {
-          if (!mounted) return;
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text("Token missing")));
-        }
+        Session.role = profile["role"];
+
+        if (!mounted) return;
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const MainScreen(),
+          ),
+        );
       } else {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(

@@ -23,42 +23,47 @@ class _SplashScreenState extends State<SplashScreen> {
   Future<void> checkLogin() async {
     final authService = AuthService();
 
-    // Load tokens from SharedPreferences
-    await authService.loadTokens();
+    await authService.loadToken();
 
-    String? token = await authService.getAccessToken();
-
-    // If access token missing, try refreshing
-    token ??= await authService.refreshAccessToken();
-
-    await Future.delayed(const Duration(milliseconds: 500));
+    await Future.delayed(
+      const Duration(milliseconds: 500),
+    );
 
     if (!mounted) return;
 
-    if (token != null) {
-      try {
-        if (!mounted) return;
+    final token = await authService.getAccessToken();
 
-        final profile = await ProfileService().getProfile();
-        Session.role = profile["role"];
-
-        if (!mounted) return;
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const MainScreen()),
-        );
-      } catch (e) {
-        if (!mounted) return;
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const LoginScreen()),
-        );
-      }
-    } else {
-      if (!mounted) return;
+    if (token == null) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const LoginScreen()),
+        MaterialPageRoute(
+          builder: (_) => const LoginScreen(),
+        ),
+      );
+      return;
+    }
+
+    try {
+      final profile = await ProfileService().getProfile();
+
+      Session.role = profile["role"];
+
+      if (!mounted) return;
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const MainScreen(),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const LoginScreen(),
+        ),
       );
     }
   }
