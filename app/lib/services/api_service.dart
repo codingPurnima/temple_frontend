@@ -1,8 +1,10 @@
 import 'dart:convert';
+
 import 'package:app/core/constants.dart';
 import 'package:app/widgets/user_model.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+
 import 'auth_service.dart';
 import 'package:app/global/global.dart';
 import 'package:app/screens/common/login_screen.dart';
@@ -11,63 +13,53 @@ class ApiClient {
   final AuthService _authService = AuthService();
 
   Map<String, String> _headers(String? token) {
-    return {
+    final headers = <String, String>{
       "Content-Type": "application/json",
-      "Authorization": "Bearer ${token?.trim()}",
     };
+
+    if (token != null && token.trim().isNotEmpty) {
+      headers["Authorization"] = "Bearer ${token.trim()}";
+    }
+
+    return headers;
+  }
+
+  Future<String?> _getToken() async {
+    return await _authService.getAccessToken();
+  }
+
+  Future<void> _handleUnauthorized() async {
+    await _authService.logout();
+
+    navigatorKey.currentState?.pushAndRemoveUntil(
+      MaterialPageRoute(
+        builder: (_) => const LoginScreen(),
+      ),
+      (route) => false,
+    );
   }
 
   Future<http.Response> get(String url) async {
-    String? token = await _authService.getAccessToken();
-    if (token != null && _isTokenExpired(token)) {
-      token = await _authService.refreshAccessToken();
-    }
+    final token = await _getToken();
 
-    var response = await http.get(Uri.parse(url), headers: _headers(token));
+    var response = await http.get(
+      Uri.parse(url),
+      headers: _headers(token),
+    );
 
     if (response.statusCode == 401) {
-      final newToken = await _authService.refreshAccessToken();
-
-      if (newToken != null) {
-        response = await http.get(Uri.parse(url), headers: _headers(newToken));
-      } else {
-        await _authService.logout();
-        navigatorKey.currentState?.pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => LoginScreen()),
-          (route) => false,
-        );
-        throw Exception("SESSION_EXPIRED");
-      }
+      await _handleUnauthorized();
+      throw Exception("SESSION_EXPIRED");
     }
+
     return response;
-  }
-
-  bool _isTokenExpired(String token) {
-    try {
-      final parts = token.split('.');
-      if (parts.length != 3) return true;
-
-      final payload = jsonDecode(
-        utf8.decode(base64Url.decode(base64Url.normalize(parts[1]))),
-      );
-
-      final exp = payload['exp'];
-      final now = DateTime.now().millisecondsSinceEpoch / 1000;
-
-      return now >= exp;
-    } catch (e) {
-      return true;
-    }
   }
 
   Future<http.Response> postRequest(
     String url,
     Map<String, dynamic> body,
   ) async {
-    String? token = await _authService.getAccessToken();
-    if (token != null && _isTokenExpired(token)) {
-      token = await _authService.refreshAccessToken();
-    }
+    final token = await _getToken();
 
     var response = await http.post(
       Uri.parse(url),
@@ -76,22 +68,8 @@ class ApiClient {
     );
 
     if (response.statusCode == 401) {
-      final newToken = await _authService.refreshAccessToken();
-
-      if (newToken != null) {
-        response = await http.post(
-          Uri.parse(url),
-          headers: _headers(newToken),
-          body: jsonEncode(body),
-        );
-      } else {
-        await _authService.logout();
-        navigatorKey.currentState?.pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => LoginScreen()),
-          (route) => false,
-        );
-        throw Exception("SESSION_EXPIRED");
-      }
+      await _handleUnauthorized();
+      throw Exception("SESSION_EXPIRED");
     }
 
     return response;
@@ -101,11 +79,7 @@ class ApiClient {
     String url,
     Map<String, dynamic> body,
   ) async {
-    String? token = await _authService.getAccessToken();
-
-    if (token != null && _isTokenExpired(token)) {
-      token = await _authService.refreshAccessToken();
-    }
+    final token = await _getToken();
 
     var response = await http.patch(
       Uri.parse(url),
@@ -114,52 +88,24 @@ class ApiClient {
     );
 
     if (response.statusCode == 401) {
-      final newToken = await _authService.refreshAccessToken();
-
-      if (newToken != null) {
-        response = await http.patch(
-          Uri.parse(url),
-          headers: _headers(newToken),
-          body: jsonEncode(body),
-        );
-      } else {
-        await _authService.logout();
-        navigatorKey.currentState?.pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => LoginScreen()),
-          (route) => false,
-        );
-        throw Exception("SESSION_EXPIRED");
-      }
+      await _handleUnauthorized();
+      throw Exception("SESSION_EXPIRED");
     }
 
     return response;
   }
 
   Future<http.Response> delete(String url) async {
-    String? token = await _authService.getAccessToken();
+    final token = await _getToken();
 
-    if (token != null && _isTokenExpired(token)) {
-      token = await _authService.refreshAccessToken();
-    }
-
-    var response = await http.delete(Uri.parse(url), headers: _headers(token));
+    var response = await http.delete(
+      Uri.parse(url),
+      headers: _headers(token),
+    );
 
     if (response.statusCode == 401) {
-      final newToken = await _authService.refreshAccessToken();
-
-      if (newToken != null) {
-        response = await http.delete(
-          Uri.parse(url),
-          headers: _headers(newToken),
-        );
-      } else {
-        await _authService.logout();
-        navigatorKey.currentState?.pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => LoginScreen()),
-          (route) => false,
-        );
-        throw Exception("SESSION_EXPIRED");
-      }
+      await _handleUnauthorized();
+      throw Exception("SESSION_EXPIRED");
     }
 
     return response;
@@ -168,7 +114,9 @@ class ApiClient {
   static Future<List<User>> getUsers(String token) async {
     final res = await http.get(
       Uri.parse("$baseUrl/admin/users"),
-      headers: {"Authorization": "Bearer $token"},
+      headers: {
+        "Authorization": "Bearer $token",
+      },
     );
 
     if (res.statusCode == 200) {
@@ -179,11 +127,14 @@ class ApiClient {
     }
   }
 
-  static Future<void> makeAdmin(int userId, String token) async {
+  static Future<void> makeAdmin(
+    int userId,
+    String token,
+  ) async {
     final res = await http.post(
-      Uri.parse('$baseUrl/admin/make-admin/$userId'),
+      Uri.parse("$baseUrl/admin/make-admin/$userId"),
       headers: {
-        'Authorization': 'Bearer $token',
+        "Authorization": "Bearer $token",
       },
     );
 
