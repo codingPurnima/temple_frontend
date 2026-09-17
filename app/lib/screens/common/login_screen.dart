@@ -65,6 +65,41 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  Future<void> _resetPassword() async {
+    final email = _emailController.text.trim();
+
+    if (email.isEmpty || !email.contains('@')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Please enter a valid email address."),
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    final success = await AuthService().resetPassword(email);
+
+    if (!mounted) return;
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          success==null
+              ? "Password reset email sent. Please check your inbox."
+              : "Unable to send password reset email.",
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -272,6 +307,26 @@ class _LoginScreenState extends State<LoginScreen> {
                     ],
                   ),
                 ),
+                
+                const SizedBox(height: 20),
+                RichText(
+                  text: TextSpan(
+                    text: "",
+                    children: [
+                      TextSpan(
+                        text: 'Forgot Password?',
+                        style: const TextStyle(
+                          fontFamily: 'TiroDevanagariHindi',
+                          color: AppTheme.saffronAccent,
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        recognizer: TapGestureRecognizer()
+                          ..onTap = _resetPassword,
+                      ),
+                    ],
+                  ),
+                )
               ],
             ),
           ),

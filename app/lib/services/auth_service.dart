@@ -205,4 +205,27 @@ class AuthService {
 
     await storage.delete(key: "role");
   }
+
+  Future<String?> resetPassword(String email) async {
+    try {
+      await FirebaseAuth.instance.sendPasswordResetEmail(
+        email: email.trim(),
+      );
+
+      return null; // success
+    } on FirebaseAuthException catch (e) {
+      switch (e.code) {
+        case 'invalid-email':
+          return 'Please enter a valid email address.';
+
+        case 'too-many-requests':
+          return 'Too many attempts. Please try again later.';
+
+        default:
+          return 'Unable to send the password reset email.';
+      }
+    } catch (e) {
+      return 'Something went wrong. Please try again.';
+    }
+  }
 }
