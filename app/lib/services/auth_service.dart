@@ -33,10 +33,7 @@ class AuthService {
     return await storage.read(key: "role");
   }
 
-  Future<Map<String, dynamic>> login(
-    String email,
-    String password,
-  ) async {
+  Future<Map<String, dynamic>> login(String email, String password) async {
     try {
       final credential = await _firebaseAuth.signInWithEmailAndPassword(
         email: email,
@@ -46,10 +43,7 @@ class AuthService {
       final user = credential.user;
 
       if (user == null) {
-        return {
-          "success": false,
-          "error": "User not found",
-        };
+        return {"success": false, "error": "User not found"};
       }
 
       // Firebase may have refreshed the user's state.
@@ -57,10 +51,7 @@ class AuthService {
       final currentUser = _firebaseAuth.currentUser;
 
       if (currentUser == null) {
-        return {
-          "success": false,
-          "error": "User session unavailable",
-        };
+        return {"success": false, "error": "User session unavailable"};
       }
 
       if (!currentUser.emailVerified) {
@@ -74,53 +65,34 @@ class AuthService {
       final idToken = await currentUser.getIdToken();
 
       if (idToken == null) {
-        return {
-          "success": false,
-          "error": "Authentication token missing",
-        };
+        return {"success": false, "error": "Authentication token missing"};
       }
 
       _firebaseIdToken = idToken;
+      print("firebase id token: $_firebaseIdToken");
 
       final profileResponse = await http.get(
         Uri.parse("$baseUrl/auth/me"),
-        headers: {
-          "Authorization": "Bearer $idToken",
-        },
+        headers: {"Authorization": "Bearer $idToken"},
       );
 
       if (profileResponse.statusCode != 200) {
-        return {
-          "success": false,
-          "error": profileResponse.body,
-        };
+        return {"success": false, "error": profileResponse.body};
       }
 
       final profile = jsonDecode(profileResponse.body);
 
-      await storage.write(
-        key: "role",
-        value: profile["role"],
-      );
+      await storage.write(key: "role", value: profile["role"]);
 
-      return {
-        "success": true,
-        "data": profile,
-      };
+      return {"success": true, "data": profile};
     } on FirebaseAuthException catch (e) {
       print("Firebase login error: ${e.code}");
 
-      return {
-        "success": false,
-        "error": e.code,
-      };
+      return {"success": false, "error": e.code};
     } catch (e) {
       print("Login error: $e");
 
-      return {
-        "success": false,
-        "error": e.toString(),
-      };
+      return {"success": false, "error": e.toString()};
     }
   }
 
@@ -130,8 +102,7 @@ class AuthService {
     required String password,
   }) async {
     try {
-      final credential = await _firebaseAuth
-          .createUserWithEmailAndPassword(
+      final credential = await _firebaseAuth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
@@ -156,9 +127,7 @@ class AuthService {
           "Content-Type": "application/json",
           "Authorization": "Bearer $idToken",
         },
-        body: jsonEncode({
-          "name": name,
-        }),
+        body: jsonEncode({"name": name}),
       );
 
       if (response.statusCode == 200) {
@@ -208,9 +177,7 @@ class AuthService {
 
   Future<String?> resetPassword(String email) async {
     try {
-      await FirebaseAuth.instance.sendPasswordResetEmail(
-        email: email.trim(),
-      );
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: email.trim());
 
       return null; // success
     } on FirebaseAuthException catch (e) {
