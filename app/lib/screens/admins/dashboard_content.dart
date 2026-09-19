@@ -25,10 +25,10 @@ class _ManageAppContentScreenState extends State<ManageAppContentScreen> {
   final ImagePicker _imagePicker = ImagePicker();
 
   // App defaults
-  static const String _defaultHomeTitle = "सन्देश / विचार";
-  static const String _defaultHomeSubtitle = "॥ श्रीमते रामानुजाय नमः ॥";
-  static const String _defaultQuoteText =
-      "हरि मिले तो वैकुंठ दिलावे।\nहरिजन मिले तो हरि सौं मिलावे।।";
+  static const String _defaultHomeContent = "";
+  static const String _defaultHomeTitle = "स्वागतम्‌";
+  static const String _defaultHomeSubtitle = "";
+  static const String _defaultQuoteText = "";
   static const String _defaultQuoteAsset = "assets/images/quote.jpg";
 
   // Controllers
@@ -83,33 +83,32 @@ class _ManageAppContentScreenState extends State<ManageAppContentScreen> {
         _content = content;
 
         // Populate Home Title (backend or default)
-        if (content.home.title != null && content.home.title!.trim().isNotEmpty) {
+        if (content.home.title != null &&
+            content.home.title!.trim().isNotEmpty) {
           _homeTitleController.text = content.home.title!;
         } else {
           _homeTitleController.text = _defaultHomeTitle;
         }
 
         // Populate Home Subtitle (backend or default)
-        if (content.home.subtitle != null && content.home.subtitle!.trim().isNotEmpty) {
+        if (content.home.subtitle != null &&
+            content.home.subtitle!.trim().isNotEmpty) {
           _homeSubtitleController.text = content.home.subtitle!;
         } else {
           _homeSubtitleController.text = _defaultHomeSubtitle;
         }
 
         // Populate Home Content (backend or bundled default)
-        if (content.home.content != null && content.home.content!.trim().isNotEmpty) {
+        if (content.home.content != null &&
+            content.home.content!.trim().isNotEmpty) {
           _homeContentController.text = content.home.content!;
         } else {
-          try {
-            final defaultText = await rootBundle.loadString('assets/text/home_screen.txt');
-            _homeContentController.text = defaultText.trim();
-          } catch (_) {
-            _homeContentController.text = "";
-          }
+          _homeContentController.text = _defaultHomeContent;
         }
 
         // Populate Quote Text (backend or default)
-        if (content.quote.text != null && content.quote.text!.trim().isNotEmpty) {
+        if (content.quote.text != null &&
+            content.quote.text!.trim().isNotEmpty) {
           _quoteTextController.text = content.quote.text!;
         } else {
           _quoteTextController.text = _defaultQuoteText;
@@ -122,7 +121,8 @@ class _ManageAppContentScreenState extends State<ManageAppContentScreen> {
         setState(() {
           _isLoading = false;
           _hasError = true;
-          _errorMessage = "सामग्री लोड करने में असमर्थ। कृपया पुनः प्रयास करें।";
+          _errorMessage =
+              "सामग्री लोड करने में असमर्थ। कृपया पुनः प्रयास करें।";
         });
       }
     } catch (e) {
@@ -144,9 +144,7 @@ class _ManageAppContentScreenState extends State<ManageAppContentScreen> {
       final pickedList = await _imagePicker.pickMultiImage();
       if (pickedList.isNotEmpty) {
         setState(() {
-          _selectedCarouselImages.addAll(
-            pickedList.map((x) => File(x.path)),
-          );
+          _selectedCarouselImages.addAll(pickedList.map((x) => File(x.path)));
         });
       }
     } catch (e) {
@@ -160,7 +158,9 @@ class _ManageAppContentScreenState extends State<ManageAppContentScreen> {
 
     setState(() => _isUploadingCarousel = true);
 
-    final result = await _contentService.uploadDashboardImages(_selectedCarouselImages);
+    final result = await _contentService.uploadDashboardImages(
+      _selectedCarouselImages,
+    );
 
     if (!mounted) return;
     setState(() => _isUploadingCarousel = false);
@@ -170,7 +170,10 @@ class _ManageAppContentScreenState extends State<ManageAppContentScreen> {
       _showSnackBar("बैनर चित्र सफलतापूर्वक अपलोड किए गए!", isError: false);
       _loadContent();
     } else {
-      _showSnackBar("चित्र अपलोड विफल रहा। कृपया पुनः प्रयास करें।", isError: true);
+      _showSnackBar(
+        "चित्र अपलोड विफल रहा। कृपया पुनः प्रयास करें।",
+        isError: true,
+      );
     }
   }
 
@@ -179,7 +182,9 @@ class _ManageAppContentScreenState extends State<ManageAppContentScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text("चित्र हटाएं / Delete Image"),
-        content: const Text("क्या आप इस बैनर चित्र को निश्चित रूप से हटाना चाहते हैं?"),
+        content: const Text(
+          "क्या आप इस बैनर चित्र को निश्चित रूप से हटाना चाहते हैं?",
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -231,7 +236,10 @@ class _ManageAppContentScreenState extends State<ManageAppContentScreen> {
 
     if (result != null) {
       setState(() => _content = result);
-      _showSnackBar("मुख्य पृष्ठ सामग्री सफलतापूर्वक सहेजी गई!", isError: false);
+      _showSnackBar(
+        "मुख्य पृष्ठ सामग्री सफलतापूर्वक सहेजी गई!",
+        isError: false,
+      );
     } else {
       _showSnackBar("अपडेट विफल रहा। कृपया नेटवर्क जांचें।", isError: true);
     }
@@ -287,9 +295,7 @@ class _ManageAppContentScreenState extends State<ManageAppContentScreen> {
 
     setState(() => _isSavingQuote = true);
 
-    final result = await _contentService.updateContent(
-      clearQuoteImage: true,
-    );
+    final result = await _contentService.updateContent(clearQuoteImage: true);
 
     if (!mounted) return;
     setState(() {
@@ -299,7 +305,10 @@ class _ManageAppContentScreenState extends State<ManageAppContentScreen> {
 
     if (result != null) {
       setState(() => _content = result);
-      _showSnackBar("डिफ़ॉल्ट सुविचार चित्र पुनर्स्थापित किया गया।", isError: false);
+      _showSnackBar(
+        "डिफ़ॉल्ट सुविचार चित्र पुनर्स्थापित किया गया।",
+        isError: false,
+      );
     } else {
       _showSnackBar("चित्र रीसेट करने में त्रुटि हुई।", isError: true);
     }
@@ -359,34 +368,37 @@ class _ManageAppContentScreenState extends State<ManageAppContentScreen> {
       body: _isLoading && _content == null
           ? const Center(child: AppLoadingView())
           : _hasError && _content == null
-              ? Center(
-                  child: AppErrorView(
-                    message: _errorMessage ?? "सामग्री लोड नहीं हो सकी",
-                    onRetry: _loadContent,
-                  ),
-                )
-              : RefreshIndicator(
-                  onRefresh: _loadContent,
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-                    child: Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 680),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            _buildCarouselSection(),
-                            const SizedBox(height: 20),
-                            _buildHomeContentSection(),
-                            const SizedBox(height: 20),
-                            _buildQuoteSection(),
-                            const SizedBox(height: 24),
-                          ],
-                        ),
-                      ),
+          ? Center(
+              child: AppErrorView(
+                message: _errorMessage ?? "सामग्री लोड नहीं हो सकी",
+                onRetry: _loadContent,
+              ),
+            )
+          : RefreshIndicator(
+              onRefresh: _loadContent,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 20,
+                ),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 680),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _buildCarouselSection(),
+                        const SizedBox(height: 20),
+                        _buildHomeContentSection(),
+                        const SizedBox(height: 20),
+                        _buildQuoteSection(),
+                        const SizedBox(height: 24),
+                      ],
                     ),
                   ),
                 ),
+              ),
+            ),
     );
   }
 
@@ -417,7 +429,8 @@ class _ManageAppContentScreenState extends State<ManageAppContentScreen> {
           _buildSectionHeader(
             icon: Icons.view_carousel_rounded,
             title: "होम बैनर चित्र / Dashboard Carousel",
-            subtitle: "मुख्य स्क्रीन पर प्रदर्शित होने वाले चित्रों का प्रबंधन करें",
+            subtitle:
+                "मुख्य स्क्रीन पर प्रदर्शित होने वाले चित्रों का प्रबंधन करें",
           ),
           const SizedBox(height: 16),
           const Divider(color: AppTheme.cardBorder, height: 1),
@@ -430,11 +443,17 @@ class _ManageAppContentScreenState extends State<ManageAppContentScreen> {
               decoration: BoxDecoration(
                 color: AppTheme.saffronLight.withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: AppTheme.warmGold.withValues(alpha: 0.3)),
+                border: Border.all(
+                  color: AppTheme.warmGold.withValues(alpha: 0.3),
+                ),
               ),
               child: const Row(
                 children: [
-                  Icon(Icons.info_outline_rounded, color: AppTheme.saffronAccent, size: 20),
+                  Icon(
+                    Icons.info_outline_rounded,
+                    color: AppTheme.saffronAccent,
+                    size: 20,
+                  ),
                   SizedBox(width: 10),
                   Expanded(
                     child: Text(
@@ -490,12 +509,17 @@ class _ManageAppContentScreenState extends State<ManageAppContentScreen> {
                                 child: SizedBox(
                                   width: 20,
                                   height: 20,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
                                 ),
                               );
                             },
                             errorBuilder: (_, _, _) => const Center(
-                              child: Icon(Icons.broken_image_rounded, color: AppTheme.textMuted),
+                              child: Icon(
+                                Icons.broken_image_rounded,
+                                color: AppTheme.textMuted,
+                              ),
                             ),
                           ),
                         ),
@@ -506,7 +530,9 @@ class _ManageAppContentScreenState extends State<ManageAppContentScreen> {
                         child: Material(
                           color: Colors.transparent,
                           child: InkWell(
-                            onTap: isDeleting ? null : () => _confirmDeleteCarouselImage(img),
+                            onTap: isDeleting
+                                ? null
+                                : () => _confirmDeleteCarouselImage(img),
                             borderRadius: BorderRadius.circular(16),
                             child: Container(
                               padding: const EdgeInsets.all(4),
@@ -527,7 +553,10 @@ class _ManageAppContentScreenState extends State<ManageAppContentScreen> {
                                       height: 14,
                                       child: CircularProgressIndicator(
                                         strokeWidth: 2,
-                                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                              Colors.white,
+                                            ),
                                       ),
                                     )
                                   : const Icon(
@@ -593,7 +622,11 @@ class _ManageAppContentScreenState extends State<ManageAppContentScreen> {
                               color: Colors.black54,
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(Icons.close_rounded, size: 14, color: Colors.white),
+                            child: const Icon(
+                              Icons.close_rounded,
+                              size: 14,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                       ),
@@ -607,14 +640,18 @@ class _ManageAppContentScreenState extends State<ManageAppContentScreen> {
               children: [
                 Expanded(
                   child: ElevatedButton.icon(
-                    onPressed: _isUploadingCarousel ? null : _uploadSelectedCarouselImages,
+                    onPressed: _isUploadingCarousel
+                        ? null
+                        : _uploadSelectedCarouselImages,
                     icon: _isUploadingCarousel
                         ? const SizedBox(
                             width: 18,
                             height: 18,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
                             ),
                           )
                         : const Icon(Icons.cloud_upload_rounded, size: 18),
@@ -688,7 +725,11 @@ class _ManageAppContentScreenState extends State<ManageAppContentScreen> {
             controller: _homeTitleController,
             decoration: const InputDecoration(
               labelText: "शीर्षक / Title",
-              prefixIcon: Icon(Icons.title_rounded, color: AppTheme.saffronAccent, size: 20),
+              prefixIcon: Icon(
+                Icons.title_rounded,
+                color: AppTheme.saffronAccent,
+                size: 20,
+              ),
             ),
           ),
           const SizedBox(height: 14),
@@ -698,7 +739,11 @@ class _ManageAppContentScreenState extends State<ManageAppContentScreen> {
             controller: _homeSubtitleController,
             decoration: const InputDecoration(
               labelText: "उप-शीर्षक / Subtitle",
-              prefixIcon: Icon(Icons.subtitles_rounded, color: AppTheme.saffronAccent, size: 20),
+              prefixIcon: Icon(
+                Icons.subtitles_rounded,
+                color: AppTheme.saffronAccent,
+                size: 20,
+              ),
             ),
           ),
           const SizedBox(height: 14),
@@ -743,7 +788,8 @@ class _ManageAppContentScreenState extends State<ManageAppContentScreen> {
 
   Widget _buildQuoteSection() {
     final customImageUrl = _content?.quote.imageUrl;
-    final hasCustomImage = _selectedQuoteImage != null ||
+    final hasCustomImage =
+        _selectedQuoteImage != null ||
         (customImageUrl != null && customImageUrl.isNotEmpty);
 
     return Container(
@@ -779,7 +825,11 @@ class _ManageAppContentScreenState extends State<ManageAppContentScreen> {
             minLines: 2,
             decoration: const InputDecoration(
               labelText: "सुविचार / Quote Text",
-              prefixIcon: Icon(Icons.edit_note_rounded, color: AppTheme.saffronAccent, size: 22),
+              prefixIcon: Icon(
+                Icons.edit_note_rounded,
+                color: AppTheme.saffronAccent,
+                size: 22,
+              ),
               alignLabelWithHint: true,
             ),
           ),
@@ -818,23 +868,21 @@ class _ManageAppContentScreenState extends State<ManageAppContentScreen> {
                         if (progress == null) return child;
                         return const Center(child: CircularProgressIndicator());
                       },
-                      errorBuilder: (_, _, _) => Image.asset(
-                        _defaultQuoteAsset,
-                        fit: BoxFit.cover,
-                      ),
+                      errorBuilder: (_, _, _) =>
+                          Image.asset(_defaultQuoteAsset, fit: BoxFit.cover),
                     )
                   else
-                    Image.asset(
-                      _defaultQuoteAsset,
-                      fit: BoxFit.cover,
-                    ),
+                    Image.asset(_defaultQuoteAsset, fit: BoxFit.cover),
 
                   // Badge overlay
                   Positioned(
                     top: 8,
                     left: 8,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.black.withValues(alpha: 0.65),
                         borderRadius: BorderRadius.circular(8),
@@ -842,9 +890,10 @@ class _ManageAppContentScreenState extends State<ManageAppContentScreen> {
                       child: Text(
                         _selectedQuoteImage != null
                             ? "नया चयनित चित्र (Pending)"
-                            : (customImageUrl != null && customImageUrl.isNotEmpty)
-                                ? "कस्टम चित्र (Custom Upload)"
-                                : "डिफ़ॉल्ट चित्र (Bundled Asset)",
+                            : (customImageUrl != null &&
+                                  customImageUrl.isNotEmpty)
+                            ? "कस्टम चित्र (Custom Upload)"
+                            : "डिफ़ॉल्ट चित्र (Bundled Asset)",
                         style: const TextStyle(
                           fontFamily: 'TiroDevanagariHindi',
                           fontSize: 12,
