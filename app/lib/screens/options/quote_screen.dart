@@ -1,19 +1,61 @@
 import 'dart:io';
 import 'dart:ui';
 import 'package:app/core/app_theme.dart';
+import 'package:app/services/content_service.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:share_plus/share_plus.dart';
 
-class QuoteScreen extends StatelessWidget {
+class QuoteScreen extends StatefulWidget {
   QuoteScreen({super.key});
 
-  final ScreenshotController screenshotController = ScreenshotController();
-  final String quote =
-      "हरि मिले तो वैकुंठ दिलावे।\nहरिजन मिले तो हरि सौं मिलावे।।";
+  @override
+  State<QuoteScreen> createState() => _QuoteScreenState();
+}
 
-  final String org = "भक्तिपथ";
+class _QuoteScreenState extends State<QuoteScreen> {
+  static const String _defaultQuote =
+      "हरि मिले तो वैकुंठ दिलावे।\nहरिजन मिले तो हरि सौं मिलावे।।";
+  static const String _bundledImage = "assets/images/quote.jpg";
+  static const String _org = "भक्तिपथ";
+
+  final ScreenshotController screenshotController = ScreenshotController();
+  final ContentService _contentService = ContentService();
+
+  // Initialized to defaults — screen is usable immediately before API responds
+  String _quoteText = _defaultQuote;
+  String? _quoteImageUrl; // null → use bundled asset
+
+  @override
+  void initState() {
+    super.initState();
+    _loadContent();
+  }
+
+  Future<void> _loadContent() async {
+    try {
+      final content = await _contentService.getContent();
+
+      if (!mounted) return;
+
+      if (content == null) return;
+
+      setState(() {
+        // Quote text: backend value or keep default
+        if (content.quote.text != null && content.quote.text!.trim().isNotEmpty) {
+          _quoteText = content.quote.text!;
+        }
+
+        // Quote image: backend URL or keep null (→ bundled asset)
+        if (content.quote.imageUrl != null && content.quote.imageUrl!.trim().isNotEmpty) {
+          _quoteImageUrl = content.quote.imageUrl;
+        }
+      });
+    } catch (_) {
+      // API failure: defaults already in place, nothing to do
+    }
+  }
 
   Future<void> shareQuote() async {
     final image = await screenshotController.capture();
@@ -26,6 +68,23 @@ class QuoteScreen extends StatelessWidget {
       files: [XFile(imagePath.path)],
       text: "नित्य सुविचार - भक्तिपथ",
     ));
+  }
+
+  Widget _buildBackground() {
+    if (_quoteImageUrl != null) {
+      return Image.network(
+        _quoteImageUrl!,
+        fit: BoxFit.cover,
+        errorBuilder: (_, _, _) => Image.asset(
+          _bundledImage,
+          fit: BoxFit.cover,
+        ),
+      );
+    }
+    return Image.asset(
+      _bundledImage,
+      fit: BoxFit.cover,
+    );
   }
 
   @override
@@ -55,10 +114,7 @@ class QuoteScreen extends StatelessWidget {
                       sigmaX: 3,
                       sigmaY: 3,
                     ),
-                    child: Image.asset(
-                      "assets/images/quote.jpg",
-                      fit: BoxFit.cover,
-                    ),
+                    child: _buildBackground(),
                   ),
                 ),
               ),
@@ -141,7 +197,7 @@ class QuoteScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          quote,
+                          _quoteText,
                           textAlign: TextAlign.center,
                           style: const TextStyle(
                             fontFamily: 'TiroDevanagariHindi',
@@ -171,7 +227,7 @@ class QuoteScreen extends StatelessWidget {
                 child: Opacity(
                   opacity: 0.4,
                   child: Text(
-                    org,
+                    _org,
                     style: const TextStyle(
                       fontFamily: 'TiroDevanagariHindi',
                       fontSize: 18,
