@@ -1,9 +1,9 @@
 import 'package:app/core/app_theme.dart';
 import 'package:app/screens/common/login_screen.dart';
 import 'package:app/services/auth_service.dart';
+import 'package:app/services/content_service.dart';
 import 'package:app/widgets/app_drawer.dart';
 import 'package:app/widgets/state_widgets/app_empty.dart';
-import 'package:app/widgets/state_widgets/app_error.dart';
 import 'package:app/widgets/state_widgets/app_loading.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
@@ -17,6 +17,100 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
+  final ContentService _contentService = ContentService();
+
+  // Bundled fallback assets for the carousel
+  static const List<String> _bundledCarouselImages = [
+    'assets/images/DashboardCarousel/header1gl.png',
+    'assets/images/DashboardCarousel/header1rr.jpeg',
+    'assets/images/DashboardCarousel/header2gl.png',
+    'assets/images/DashboardCarousel/header2rr.jpeg',
+    'assets/images/DashboardCarousel/header3gl.png',
+    'assets/images/DashboardCarousel/header3rr.jpeg',
+    'assets/images/DashboardCarousel/header4rr.jpeg',
+  ];
+
+  static const String _defaultTitle = "सन्देश / विचार";
+
+  List<String> _carouselImages = [];
+  String _title = _defaultTitle;
+  String? _subtitle;
+  String? _content;
+  bool _isLoadingContent = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadInitialContent();
+  }
+
+  Future<void> _loadInitialContent() async {
+    // 1. Preload bundled text fallback so screen is immediately readable
+    try {
+      final bundledText = await rootBundle.loadString('assets/text/home_screen.txt');
+      if (mounted) {
+        setState(() {
+          _content = bundledText.trim();
+        });
+      }
+    } catch (_) {}
+
+    // 2. Fetch dynamic content from backend
+    await _fetchRemoteContent();
+  }
+
+  Future<void> _fetchRemoteContent() async {
+    try {
+      final appContent = await _contentService.getContent();
+
+      if (!mounted) return;
+
+      if (appContent != null) {
+        setState(() {
+          // Dynamic Home Title
+          if (appContent.home.title != null && appContent.home.title!.trim().isNotEmpty) {
+            _title = appContent.home.title!;
+          } else {
+            _title = _defaultTitle;
+          }
+
+          // Dynamic Home Subtitle
+          if (appContent.home.subtitle != null && appContent.home.subtitle!.trim().isNotEmpty) {
+            _subtitle = appContent.home.subtitle!;
+          } else {
+            _subtitle = null;
+          }
+
+          // Dynamic Home Content
+          if (appContent.home.content != null && appContent.home.content!.trim().isNotEmpty) {
+            _content = appContent.home.content!;
+          }
+
+          // Dynamic Carousel Images
+          if (appContent.dashboardImages.isNotEmpty) {
+            _carouselImages = appContent.dashboardImages.map((e) => e.imageUrl).toList();
+          } else {
+            _carouselImages = [];
+          }
+
+          _isLoadingContent = false;
+        });
+      } else {
+        if (mounted) {
+          setState(() {
+            _isLoadingContent = false;
+          });
+        }
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _isLoadingContent = false;
+        });
+      }
+    }
+  }
+
   Future<void> _handleLogout(BuildContext context) async {
     final shouldLogout = await showDialog<bool>(
       context: context,
@@ -68,8 +162,153 @@ class _MainScreenState extends State<MainScreen> {
     }
   }
 
-  Future<String> loadText() async {
-    return await rootBundle.loadString('assets/text/home_screen.txt');
+  Widget _buildCarousel() {
+    final useNetwork = _carouselImages.isNotEmpty;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppTheme.cardBorder),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x10000000),
+              blurRadius: 10,
+              offset: Offset(0, 3),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: CarouselSlider(
+            options: CarouselOptions(
+              height: 380,
+              autoPlay: true,
+              autoPlayInterval: const Duration(seconds: 4),
+              viewportFraction: 1.0,
+              enlargeCenterPage: false,
+            ),
+            items: useNetwork
+                ? _carouselImages.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final url = entry.value;
+                    final fallbackAsset = _bundledCarouselImages[index % _bundledCarouselImages.length];
+
+                    return Image.network(
+                      url,
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                      errorBuilder: (_, _, _) => Image.asset(
+                        fallbackAsset,
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                      ),
+                    );
+                  }).toList()
+                : _bundledCarouselImages.map((path) {
+                    return Image.asset(
+                      path,
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                    );
+                  }).toList(),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildReadingSection() {
+    if (_content == null && _isLoadingContent) {
+      return const Padding(
+        padding: EdgeInsets.all(32),
+        child: AppLoadingView(),
+      );
+    }
+
+    if (_content == null) {
+      return const AppEmptyView(
+        title: "कोई सामग्री उपलब्ध नहीं है",
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppTheme.cardBorder),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x08000000),
+              blurRadius: 8,
+              offset: Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 4,
+                  height: 18,
+                  decoration: BoxDecoration(
+                    color: AppTheme.saffronAccent,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    _title,
+                    style: const TextStyle(
+                      fontFamily: 'TiroDevanagariHindi',
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.primaryNavy,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            if (_subtitle != null && _subtitle!.trim().isNotEmpty) ...[
+              const SizedBox(height: 6),
+              Padding(
+                padding: const EdgeInsets.only(left: 12),
+                child: Text(
+                  _subtitle!,
+                  style: const TextStyle(
+                    fontFamily: 'TiroDevanagariHindi',
+                    fontSize: 13,
+                    color: AppTheme.saffronAccent,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+            const SizedBox(height: 12),
+            const Divider(color: AppTheme.cardBorder, height: 1),
+            const SizedBox(height: 14),
+            Text(
+              _content!,
+              style: const TextStyle(
+                fontFamily: 'TiroDevanagariHindi',
+                fontSize: 16,
+                height: 1.8,
+                color: AppTheme.textPrimary,
+                fontWeight: FontWeight.w400,
+              ),
+              textAlign: TextAlign.justify,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -117,137 +356,17 @@ class _MainScreenState extends State<MainScreen> {
         ),
       ),
       drawer: const AppDrawer(),
-      body: ListView(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        children: [
-          // Banner Carousel with elegant rounded borders and shadow
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppTheme.cardBorder),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color(0x10000000),
-                    blurRadius: 10,
-                    offset: Offset(0, 3),
-                  ),
-                ],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: CarouselSlider(
-                  options: CarouselOptions(
-                    height: 380,
-                    autoPlay: true,
-                    autoPlayInterval: const Duration(seconds: 4),
-                    viewportFraction: 1.0,
-                    enlargeCenterPage: false,
-                  ),
-                  items: [
-                    'assets/images/DashboardCarousel/header1gl.png',
-                    'assets/images/DashboardCarousel/header1rr.jpeg',
-                    'assets/images/DashboardCarousel/header2gl.png',
-                    'assets/images/DashboardCarousel/header2rr.jpeg',
-                    'assets/images/DashboardCarousel/header3gl.png',
-                    'assets/images/DashboardCarousel/header3rr.jpeg',
-                    'assets/images/DashboardCarousel/header4rr.jpeg',
-                  ].map((path) {
-                    return Image.asset(
-                      path,
-                      fit: BoxFit.cover,
-                      width: double.infinity,
-                    );
-                  }).toList(),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // Reading Section Card
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: FutureBuilder<String>(
-              future: loadText(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Padding(
-                    padding: EdgeInsets.all(32),
-                    child: AppLoadingView(),
-                  );
-                } else if (snapshot.hasError) {
-                  return AppErrorView(
-                    message: "संदेश लोड नहीं हो सका: ${snapshot.error}",
-                  );
-                } else if (snapshot.hasData) {
-                  return Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: AppTheme.cardBorder),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Color(0x08000000),
-                          blurRadius: 8,
-                          offset: Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              width: 4,
-                              height: 18,
-                              decoration: BoxDecoration(
-                                color: AppTheme.saffronAccent,
-                                borderRadius: BorderRadius.circular(2),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            const Text(
-                              "सन्देश / विचार",
-                              style: TextStyle(
-                                fontFamily: 'TiroDevanagariHindi',
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: AppTheme.primaryNavy,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        const Divider(color: AppTheme.cardBorder, height: 1),
-                        const SizedBox(height: 14),
-                        Text(
-                          snapshot.data!,
-                          style: const TextStyle(
-                            fontFamily: 'TiroDevanagariHindi',
-                            fontSize: 16,
-                            height: 1.8,
-                            color: AppTheme.textPrimary,
-                            fontWeight: FontWeight.w400,
-                          ),
-                          textAlign: TextAlign.justify,
-                        ),
-                      ],
-                    ),
-                  );
-                } else {
-                  return const AppEmptyView(
-                    title: "कोई सामग्री उपलब्ध नहीं है",
-                  );
-                }
-              },
-            ),
-          ),
-          const SizedBox(height: 20),
-        ],
+      body: RefreshIndicator(
+        onRefresh: _fetchRemoteContent,
+        child: ListView(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          children: [
+            _buildCarousel(),
+            const SizedBox(height: 16),
+            _buildReadingSection(),
+            const SizedBox(height: 20),
+          ],
+        ),
       ),
     );
   }
