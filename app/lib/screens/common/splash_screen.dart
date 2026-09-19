@@ -83,14 +83,14 @@ class _SplashScreenState extends State<SplashScreen> {
                 shape: BoxShape.circle,
                 border: Border.all(color: AppTheme.warmGold, width: 2),
                 image: const DecorationImage(
-                  image: AssetImage('assets/images/BhaktipathYT.jpeg'),
+                  image: AssetImage('assets/images/Splash.png'),
                   fit: BoxFit.cover,
                 ),
               ),
             ),
             const SizedBox(height: 24),
             const Text(
-              "भक्तिपथ",
+              " मन्दिरम् ",
               style: TextStyle(
                 fontFamily: 'TiroDevanagariHindi',
                 color: Colors.white,

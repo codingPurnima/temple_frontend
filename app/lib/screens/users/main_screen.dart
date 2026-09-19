@@ -316,7 +316,7 @@ class _MainScreenState extends State<MainScreen> {
     return Scaffold(
       backgroundColor: AppTheme.parchmentBackground,
       appBar: AppBar(
-        title: const Text("भक्तिपथ"),
+        title: const Text("मन्दिरम्"),
         actions: [
           IconButton(
             tooltip: "Logout",
