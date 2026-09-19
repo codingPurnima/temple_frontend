@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "219415411998",
+    "project_id": "temple-database-3f6a4",
+    "storage_bucket": "temple-database-3f6a4.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:219415411998:android:8ab10a22903803d4d61d0f",
+        "android_client_info": {
+          "package_name": "com.example.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCMTGqOTKSfocFnXGvYsGqs_EB4Qoh1u2E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
