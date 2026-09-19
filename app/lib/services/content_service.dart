@@ -7,8 +7,28 @@ import '../core/constants.dart';
 import '../models/content_model.dart';
 import 'api_service.dart';
 
+import 'package:http_parser/http_parser.dart';
+
 class ContentService {
   final ApiClient _apiClient = ApiClient();
+
+  MediaType? _getImageContentType(String path) {
+  final extension = path.split('.').last.toLowerCase();
+
+  switch (extension) {
+    case 'jpg':
+    case 'jpeg':
+      return MediaType('image', 'jpeg');
+    case 'png':
+      return MediaType('image', 'png');
+    case 'webp':
+      return MediaType('image', 'webp');
+    case 'gif':
+      return MediaType('image', 'gif');
+    default:
+      return null;
+  }
+}
 
   /// Fetches the current app content (home texts, carousel images, and quote).
   Future<AppContent?> getContent() async {
@@ -53,6 +73,7 @@ class ContentService {
         files.add(await http.MultipartFile.fromPath(
           'quote_image',
           quoteImage.path,
+          contentType: _getImageContentType(quoteImage.path)
         ));
       }
 
@@ -89,6 +110,7 @@ class ContentService {
         files.add(await http.MultipartFile.fromPath(
           'dashboard_images',
           image.path,
+          contentType: _getImageContentType(image.path)
         ));
       }
 
