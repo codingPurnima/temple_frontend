@@ -91,7 +91,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   child: const CircleAvatar(
                     radius: 50,
                     backgroundColor: Colors.white,
-                    backgroundImage: AssetImage('assets/images/BhaktipathYT.jpeg'),
+                    backgroundImage: AssetImage('assets/images/Splash.png'),
                   ),
                 ),
                 const SizedBox(height: 16),
