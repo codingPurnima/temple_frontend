@@ -111,6 +111,39 @@ class ApiClient {
     return response;
   }
 
+  Future<http.Response> multipartRequest({
+    required String method,
+    required String url,
+    Map<String, String>? fields,
+    List<http.MultipartFile>? files,
+  }) async {
+    final token = await _getToken();
+    final uri = Uri.parse(url);
+    final request = http.MultipartRequest(method, uri);
+
+    if (token != null && token.trim().isNotEmpty) {
+      request.headers["Authorization"] = "Bearer ${token.trim()}";
+    }
+
+    if (fields != null) {
+      request.fields.addAll(fields);
+    }
+
+    if (files != null) {
+      request.files.addAll(files);
+    }
+
+    final streamedResponse = await request.send();
+    final response = await http.Response.fromStream(streamedResponse);
+
+    if (response.statusCode == 401) {
+      await _handleUnauthorized();
+      throw Exception("SESSION_EXPIRED");
+    }
+
+    return response;
+  }
+
   static Future<List<User>> getUsers(String token) async {
     final res = await http.get(
       Uri.parse("$baseUrl/admin/users"),
