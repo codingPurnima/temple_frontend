@@ -1,5 +1,6 @@
 import 'package:app/core/app_theme.dart';
 import 'package:app/screens/admins/create_events_screen.dart';
+import 'package:app/screens/admins/dashboard_content.dart';
 import 'package:app/screens/admins/manage_users_screen.dart';
 import 'package:app/screens/common/login_screen.dart';
 import 'package:app/services/auth_service.dart';
@@ -107,17 +108,17 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
             color: Color(0xFF4F46E5),
             screen: CreateEventsScreen(),
           ),
-          const AdminCard(
+          const AdminCard( //DOESN'T WORK RN
             title: "View Participants\n(प्रतिभागी)",
             icon: Icons.people_alt_rounded,
             color: AppTheme.warmGold,
             screen: CreateCharacterScreen(),
           ),
           const AdminCard(
-            title: "Add Quote\n(सुविचार)",
-            icon: Icons.format_quote_rounded,
+            title: "Manage App Content\n(सामग्री प्रबंधन)",
+            icon: Icons.dashboard_customize_rounded,
             color: Color(0xFF7C3AED),
-            screen: CreateCharacterScreen(),
+            screen: DashboardContent(),
           ),
           const AdminCard(
             title: "Sampradaya\n(संप्रदाय विवरण)",
