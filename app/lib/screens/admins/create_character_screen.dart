@@ -47,7 +47,7 @@ class _CreateCharacterScreenState extends State<CreateCharacterScreen> {
     if (response.statusCode == 200 || response.statusCode == 201) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("Bhakt Charitra added successfully!"),
+          content: Text("भक्त चरित्र सफलतापूर्वक जोड़ा गया ।  "),
           backgroundColor: AppTheme.successGreen,
         ),
       );
@@ -57,7 +57,7 @@ class _CreateCharacterScreenState extends State<CreateCharacterScreen> {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("Failed to add. Please try again."),
+          content: Text("प्रयास असफल । पुनः प्रयास करें ।  "),
         ),
       );
     }

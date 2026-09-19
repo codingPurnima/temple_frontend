@@ -63,7 +63,7 @@ class _CreateEventsScreenState extends State<CreateEventsScreen> {
     if (response.statusCode == 200 || response.statusCode == 201) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("Event added successfully!"),
+          content: Text("उत्सव सफलतापूर्वक जोड़ा गया ।"),
           backgroundColor: AppTheme.successGreen,
         ),
       );
@@ -71,7 +71,7 @@ class _CreateEventsScreenState extends State<CreateEventsScreen> {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("Failed to create event. Please try again."),
+          content: Text("प्रयास असफल । पुनः प्रयास करें ।"),
         ),
       );
     }

@@ -53,7 +53,7 @@ class _CreateLyricsScreenState extends State<CreateLyricsScreen> {
     if (response.statusCode == 200 || response.statusCode == 201) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("Lyrics added successfully!"),
+          content: Text("पद सफलतापूर्वक जोड़ा गया ।"),
           backgroundColor: AppTheme.successGreen,
         ),
       );
@@ -64,7 +64,7 @@ class _CreateLyricsScreenState extends State<CreateLyricsScreen> {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("Failed to submit lyrics. Please try again."),
+          content: Text("प्रयास असफल । पुनः प्रयास करें ।"),
         ),
       );
     }
