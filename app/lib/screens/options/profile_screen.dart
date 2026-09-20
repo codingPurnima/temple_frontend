@@ -56,7 +56,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.parchmentBackground,
-      appBar: AppBar(title: const Text("भक्त प्रोफ़ाइल")),
+      appBar: AppBar(title: const Text("प्रोफ़ाइल")),
       body: isLoading
           ? const AppLoadingView(message: "विवरण लोड हो रहा है...")
           : hasError || userDetails.isEmpty
@@ -115,7 +115,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                             alignment: Alignment.center,
                             child: const Text(
-                              "॥ भक्तिपथ परिचय पत्र ॥",
+                              "॥ मन्दिरम् परिचय पत्र ॥",
                               style: TextStyle(
                                 fontFamily: 'TiroDevanagariHindi',
                                 color: AppTheme.warmGoldLight,
