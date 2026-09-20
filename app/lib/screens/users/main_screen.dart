@@ -7,7 +7,6 @@ import 'package:app/widgets/state_widgets/app_empty.dart';
 import 'package:app/widgets/state_widgets/app_loading.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -45,17 +44,6 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   Future<void> _loadInitialContent() async {
-    // 1. Preload bundled text fallback so screen is immediately readable
-    try {
-      final bundledText = await rootBundle.loadString('assets/text/home_screen.txt');
-      if (mounted) {
-        setState(() {
-          _content = bundledText.trim();
-        });
-      }
-    } catch (_) {}
-
-    // 2. Fetch dynamic content from backend
     await _fetchRemoteContent();
   }
 
@@ -98,6 +86,10 @@ class _MainScreenState extends State<MainScreen> {
       } else {
         if (mounted) {
           setState(() {
+            _title = _defaultTitle;
+            _subtitle = null;
+            _content = null;
+            _carouselImages = [];
             _isLoadingContent = false;
           });
         }
@@ -163,6 +155,15 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   Widget _buildCarousel() {
+    if (_isLoadingContent) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16),
+        child: SizedBox(
+          height: 380,
+          child: AppLoadingView(),
+        ),
+      );
+    }
     final useNetwork = _carouselImages.isNotEmpty;
 
     return Padding(
