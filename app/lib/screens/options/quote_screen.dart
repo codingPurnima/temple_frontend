@@ -8,7 +8,7 @@ import 'package:screenshot/screenshot.dart';
 import 'package:share_plus/share_plus.dart';
 
 class QuoteScreen extends StatefulWidget {
-  QuoteScreen({super.key});
+  const QuoteScreen({super.key});
 
   @override
   State<QuoteScreen> createState() => _QuoteScreenState();
@@ -18,14 +18,15 @@ class _QuoteScreenState extends State<QuoteScreen> {
   static const String _defaultQuote =
       "हरि मिले तो वैकुंठ दिलावे।\nहरिजन मिले तो हरि सौं मिलावे।।";
   static const String _bundledImage = "assets/images/quote.jpg";
-  static const String _org = "भक्तिपथ";
+  static const String _org = "मन्दिरम्";
 
   final ScreenshotController screenshotController = ScreenshotController();
   final ContentService _contentService = ContentService();
 
   // Initialized to defaults — screen is usable immediately before API responds
-  String _quoteText = _defaultQuote;
-  String? _quoteImageUrl; // null → use bundled asset
+  String? _quoteText;
+  String? _quoteImageUrl;
+  bool _isLoadingContent = true;
 
   @override
   void initState() {
@@ -39,21 +40,41 @@ class _QuoteScreenState extends State<QuoteScreen> {
 
       if (!mounted) return;
 
-      if (content == null) return;
+      if (content != null) {
+        setState(() {
+          // Quote text: backend value or default after API response
+          if (content.quote.text != null &&
+              content.quote.text!.trim().isNotEmpty) {
+            _quoteText = content.quote.text!;
+          } else {
+            _quoteText = _defaultQuote;
+          }
 
-      setState(() {
-        // Quote text: backend value or keep default
-        if (content.quote.text != null && content.quote.text!.trim().isNotEmpty) {
-          _quoteText = content.quote.text!;
-        }
+          // Quote image: backend URL or bundled fallback after API response
+          if (content.quote.imageUrl != null &&
+              content.quote.imageUrl!.trim().isNotEmpty) {
+            _quoteImageUrl = content.quote.imageUrl;
+          } else {
+            _quoteImageUrl = null;
+          }
 
-        // Quote image: backend URL or keep null (→ bundled asset)
-        if (content.quote.imageUrl != null && content.quote.imageUrl!.trim().isNotEmpty) {
-          _quoteImageUrl = content.quote.imageUrl;
-        }
-      });
+          _isLoadingContent = false;
+        });
+      } else {
+        setState(() {
+          _quoteText = _defaultQuote;
+          _quoteImageUrl = null;
+          _isLoadingContent = false;
+        });
+      }
     } catch (_) {
-      // API failure: defaults already in place, nothing to do
+      if (mounted) {
+        setState(() {
+          _quoteText = _defaultQuote;
+          _quoteImageUrl = null;
+          _isLoadingContent = false;
+        });
+      }
     }
   }
 
@@ -64,13 +85,26 @@ class _QuoteScreenState extends State<QuoteScreen> {
     final imagePath = File('${directory.path}/quote.png');
     await imagePath.writeAsBytes(image);
 
-    await SharePlus.instance.share(ShareParams(
-      files: [XFile(imagePath.path)],
-      text: "नित्य सुविचार - भक्तिपथ",
-    ));
+    await SharePlus.instance.share(
+      ShareParams(
+        files: [XFile(imagePath.path)],
+        text: "नित्य सुविचार - भक्तिपथ",
+      ),
+    );
   }
 
   Widget _buildBackground() {
+    if (_isLoadingContent) {
+      return Container(
+        color: AppTheme.primaryNavy,
+        child: const Center(
+          child: CircularProgressIndicator(
+            color: AppTheme.warmGold,
+          ),
+        ),
+      );
+    }
+
     if (_quoteImageUrl != null) {
       return Image.network(
         _quoteImageUrl!,
@@ -81,6 +115,7 @@ class _QuoteScreenState extends State<QuoteScreen> {
         ),
       );
     }
+
     return Image.asset(
       _bundledImage,
       fit: BoxFit.cover,
@@ -110,10 +145,7 @@ class _QuoteScreenState extends State<QuoteScreen> {
               Positioned.fill(
                 child: ClipRect(
                   child: ImageFiltered(
-                    imageFilter: ImageFilter.blur(
-                      sigmaX: 3,
-                      sigmaY: 3,
-                    ),
+                    imageFilter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
                     child: _buildBackground(),
                   ),
                 ),
@@ -146,18 +178,21 @@ class _QuoteScreenState extends State<QuoteScreen> {
                       padding: const EdgeInsets.all(2),
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        border: Border.all(color: AppTheme.warmGold, width: 1.5),
+                        border: Border.all(
+                          color: AppTheme.warmGold,
+                          width: 1.5,
+                        ),
                       ),
                       child: const CircleAvatar(
                         radius: 18,
                         backgroundImage: AssetImage(
-                          "assets/images/BhaktipathYT.jpeg",
+                          "assets/images/Splash.png",
                         ),
                       ),
                     ),
                     const SizedBox(width: 10),
                     const Text(
-                      "भक्तिपथ",
+                      "मन्दिरम्",
                       style: TextStyle(
                         fontFamily: 'TiroDevanagariHindi',
                         fontSize: 16,
@@ -197,7 +232,7 @@ class _QuoteScreenState extends State<QuoteScreen> {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          _quoteText,
+                          _quoteText??'',
                           textAlign: TextAlign.center,
                           style: const TextStyle(
                             fontFamily: 'TiroDevanagariHindi',
